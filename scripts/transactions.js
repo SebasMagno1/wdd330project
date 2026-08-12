@@ -23,12 +23,7 @@ import {
 } from "./storage.js";
 
 
-/* =========================================================
-   INITIALIZE
-   ========================================================= */
-
-document.addEventListener(
-    "DOMContentLoaded",
+document.addEventListener("DOMContentLoaded",
     () => {
 
         initializeTransactions();
@@ -38,22 +33,55 @@ document.addEventListener(
 
 
 /* =========================================================
-   INITIALIZE TRANSACTIONS
+   INITIALIZE TRANSACTIONS MODULE
    ========================================================= */
 
 function initializeTransactions() {
 
-    setupIncomeForm();
+    const incomeForm =
+        document.querySelector("#income-form");
 
-    setupExpenseForm();
+    const expenseForm =
+        document.querySelector("#expense-form");
 
-    setupTransactionFilters();
+    const transactionsList =
+        document.querySelector("#transactions-list");
 
-    displayIncome();
 
-    displayExpenses();
+    /* ---------------------------------------------------------
+       INCOME PAGE
+       --------------------------------------------------------- */
 
-    setupTransactionsPage();
+    if (incomeForm) {
+
+        setupIncomeForm();
+        displayIncome();
+
+    }
+
+
+    /* ---------------------------------------------------------
+       EXPENSE PAGE
+       --------------------------------------------------------- */
+
+    if (expenseForm) {
+
+        setupExpenseForm();
+        displayExpenses();
+
+    }
+
+
+    /* ---------------------------------------------------------
+       TRANSACTIONS PAGE
+       --------------------------------------------------------- */
+
+    if (transactionsList) {
+
+        setupTransactionFilters();
+        setupTransactionsPage();
+
+    }
 
 }
 
