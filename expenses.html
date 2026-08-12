@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description"
+        content="FinanceHub expense management. Add, edit and delete expense records.">
+
+    <title>FinanceHub | Expenses</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="site-header">
+
+        <div class="header-container">
+
+            <a href="index.html" class="logo">
+                Finance<span>Hub</span>
+            </a>
+
+            <button
+                class="menu-button"
+                aria-label="Open navigation menu">
+
+                ☰
+
+            </button>
+
+
+            <!-- NAVIGATION -->
+            <nav class="main-navigation">
+
+                <ul class="navigation">
+
+                    <li>
+                        <a href="index.html">
+                            Home
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="dashboard.html">
+                            Dashboard
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="transactions.html">
+                            Transactions
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="income.html">
+                            Income
+                        </a>
+                    </li>
+
+                    <li>
+                        <a class="active" href="expenses.html">
+                            Expenses
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="budget.html">
+                            Budget
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="analytics.html">
+                            Analytics
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="currency.html">
+                            Currency
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="news.html">
+                            Financial News
+                        </a>
+                    </li>
+
+                </ul>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+
+    <!-- MAIN -->
+    <main class="expenses-page">
+
+
+        <!-- PAGE HEADER -->
+        <section class="page-header">
+
+            <h1>
+                Expense Management
+            </h1>
+
+            <p>
+                Track and manage your spending.
+            </p>
+
+        </section>
+
+
+        <!-- EXPENSE FORM -->
+        <section class="form-section">
+
+            <div class="form-card">
+
+                <h2>
+                    Add Expense
+                </h2>
+
+
+                <form id="expense-form">
+
+
+                    <!-- DESCRIPTION -->
+                    <div class="form-group">
+
+                        <label for="expense-description">
+                            Description
+                        </label>
+
+                        <input
+                            type="text"
+                            id="expense-description"
+                            name="description"
+                            placeholder="Example: Grocery shopping"
+                            required>
+
+                    </div>
+
+
+                    <!-- AMOUNT -->
+                    <div class="form-group">
+
+                        <label for="expense-amount">
+                            Amount
+                        </label>
+
+                        <input
+                            type="number"
+                            id="expense-amount"
+                            name="amount"
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                            required>
+
+                    </div>
+
+
+                    <!-- CATEGORY -->
+                    <div class="form-group">
+
+                        <label for="expense-category">
+                            Category
+                        </label>
+
+                        <select
+                            id="expense-category"
+                            name="category"
+                            required>
+
+                            <option value="">
+                                Select a category
+                            </option>
+
+                            <option value="Food">
+                                Food
+                            </option>
+
+                            <option value="Transportation">
+                                Transportation
+                            </option>
+
+                            <option value="Entertainment">
+                                Entertainment
+                            </option>
+
+                            <option value="Utilities">
+                                Utilities
+                            </option>
+
+                            <option value="Healthcare">
+                                Healthcare
+                            </option>
+
+                            <option value="Shopping">
+                                Shopping
+                            </option>
+
+                            <option value="Education">
+                                Education
+                            </option>
+
+                            <option value="Housing">
+                                Housing
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- DATE -->
+                    <div class="form-group">
+
+                        <label for="expense-date">
+                            Date
+                        </label>
+
+                        <input
+                            type="date"
+                            id="expense-date"
+                            name="date"
+                            required>
+
+                    </div>
+
+
+                    <!-- PAYMENT METHOD -->
+                    <div class="form-group">
+
+                        <label for="payment-method">
+                            Payment Method
+                        </label>
+
+                        <select
+                            id="payment-method"
+                            name="paymentMethod">
+
+                            <option value="">
+                                Select payment method
+                            </option>
+
+                            <option value="Cash">
+                                Cash
+                            </option>
+
+                            <option value="Debit Card">
+                                Debit Card
+                            </option>
+
+                            <option value="Credit Card">
+                                Credit Card
+                            </option>
+
+                            <option value="Bank Transfer">
+                                Bank Transfer
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- NOTES -->
+                    <div class="form-group">
+
+                        <label for="expense-notes">
+                            Notes
+                        </label>
+
+                        <textarea
+                            id="expense-notes"
+                            name="notes"
+                            rows="4"
+                            placeholder="Optional notes...">
+                        </textarea>
+
+                    </div>
+
+
+                    <!-- BUTTONS -->
+                    <div class="form-buttons">
+
+                        <button
+                            type="submit"
+                            class="btn primary-btn">
+
+                            Save Expense
+
+                        </button>
+
+
+                        <button
+                            type="reset"
+                            class="btn secondary-btn">
+
+                            Clear
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </section>
+
+
+        <!-- RECENT EXPENSES -->
+        <section class="records-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Recent Expenses
+                    </h2>
+
+                    <p>
+                        Your latest expense records.
+                    </p>
+
+                </div>
+
+
+                <a
+                    href="transactions.html"
+                    class="btn secondary-btn">
+
+                    View Transactions
+
+                </a>
+
+            </div>
+
+
+            <div
+                class="records-list"
+                id="expense-list">
+
+                <p class="empty-message">
+                    No expense records available.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+
+        <div class="footer-bottom">
+
+            <p>
+                &copy; 2026 FinanceHub. All rights reserved.
+            </p>
+
+        </div>
+
+    </footer>
+
+
+    <!-- JAVASCRIPT -->
+    <script
+        type="module"
+        src="js/transactions.js">
+    </script>
+
+</body>
+</html>

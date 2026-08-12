@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description"
+        content="FinanceHub currency converter using current exchange rates.">
+
+    <title>FinanceHub | Currency Converter</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="site-header">
+
+        <div class="header-container">
+
+            <a href="index.html" class="logo">
+                Finance<span>Hub</span>
+            </a>
+
+            <button
+                class="menu-button"
+                aria-label="Open navigation menu">
+                ☰
+            </button>
+
+            <nav class="main-navigation">
+
+                <ul class="navigation">
+
+                    <li>
+                        <a href="index.html">Home</a>
+                    </li>
+
+                    <li>
+                        <a href="dashboard.html">Dashboard</a>
+                    </li>
+
+                    <li>
+                        <a href="transactions.html">Transactions</a>
+                    </li>
+
+                    <li>
+                        <a href="income.html">Income</a>
+                    </li>
+
+                    <li>
+                        <a href="expenses.html">Expenses</a>
+                    </li>
+
+                    <li>
+                        <a href="budget.html">Budget</a>
+                    </li>
+
+                    <li>
+                        <a href="analytics.html">Analytics</a>
+                    </li>
+
+                    <li>
+                        <a class="active" href="currency.html">
+                            Currency
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="news.html">Financial News</a>
+                    </li>
+
+                </ul>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+
+    <!-- MAIN -->
+    <main class="currency-page">
+
+        <!-- PAGE HEADER -->
+        <section class="page-header">
+
+            <h1>
+                Currency Converter
+            </h1>
+
+            <p>
+                Convert your money using current exchange rates.
+            </p>
+
+        </section>
+
+
+        <!-- CONVERTER -->
+        <section class="converter-section">
+
+            <div class="converter-card">
+
+                <h2>
+                    Convert Currency
+                </h2>
+
+                <p class="converter-description">
+                    Enter an amount and select the currencies
+                    you want to convert.
+                </p>
+
+
+                <form id="currency-form">
+
+                    <!-- AMOUNT -->
+                    <div class="form-group">
+
+                        <label for="currency-amount">
+                            Amount
+                        </label>
+
+                        <input
+                            type="number"
+                            id="currency-amount"
+                            name="amount"
+                            min="0"
+                            step="0.01"
+                            placeholder="100.00"
+                            required>
+
+                    </div>
+
+
+                    <!-- FROM CURRENCY -->
+                    <div class="form-group">
+
+                        <label for="from-currency">
+                            From
+                        </label>
+
+                        <select
+                            id="from-currency"
+                            name="from"
+                            required>
+
+                            <option value="USD">
+                                USD - US Dollar
+                            </option>
+
+                            <option value="EUR">
+                                EUR - Euro
+                            </option>
+
+                            <option value="GBP">
+                                GBP - British Pound
+                            </option>
+
+                            <option value="CAD">
+                                CAD - Canadian Dollar
+                            </option>
+
+                            <option value="MXN">
+                                MXN - Mexican Peso
+                            </option>
+
+                            <option value="BOB">
+                                BOB - Bolivian Boliviano
+                            </option>
+
+                            <option value="JPY">
+                                JPY - Japanese Yen
+                            </option>
+
+                            <option value="CNY">
+                                CNY - Chinese Yuan
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- SWAP -->
+                    <button
+                        type="button"
+                        id="swap-currencies"
+                        class="swap-button"
+                        aria-label="Swap currencies">
+
+                        ⇄
+
+                    </button>
+
+
+                    <!-- TO CURRENCY -->
+                    <div class="form-group">
+
+                        <label for="to-currency">
+                            To
+                        </label>
+
+                        <select
+                            id="to-currency"
+                            name="to"
+                            required>
+
+                            <option value="EUR">
+                                EUR - Euro
+                            </option>
+
+                            <option value="USD">
+                                USD - US Dollar
+                            </option>
+
+                            <option value="GBP">
+                                GBP - British Pound
+                            </option>
+
+                            <option value="CAD">
+                                CAD - Canadian Dollar
+                            </option>
+
+                            <option value="MXN">
+                                MXN - Mexican Peso
+                            </option>
+
+                            <option value="BOB">
+                                BOB - Bolivian Boliviano
+                            </option>
+
+                            <option value="JPY">
+                                JPY - Japanese Yen
+                            </option>
+
+                            <option value="CNY">
+                                CNY - Chinese Yuan
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- CONVERT BUTTON -->
+                    <button
+                        type="submit"
+                        class="btn primary-btn">
+
+                        Convert
+
+                    </button>
+
+                </form>
+
+
+                <!-- RESULT -->
+                <div
+                    class="conversion-result"
+                    id="conversion-result"
+                    aria-live="polite">
+
+                    <p>
+                        Enter an amount to see the conversion.
+                    </p>
+
+                </div>
+
+
+                <!-- RATE -->
+                <div
+                    class="exchange-rate"
+                    id="exchange-rate">
+
+                    <p>
+                        Exchange rate information will appear here.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- QUICK CONVERSIONS -->
+        <section class="currency-info">
+
+            <div class="section-header">
+
+                <h2>
+                    Supported Currencies
+                </h2>
+
+                <p>
+                    FinanceHub supports several commonly used currencies.
+                </p>
+
+            </div>
+
+
+            <div class="currency-grid">
+
+                <article class="currency-card">
+
+                    <h3>USD</h3>
+
+                    <p>
+                        US Dollar
+                    </p>
+
+                </article>
+
+
+                <article class="currency-card">
+
+                    <h3>EUR</h3>
+
+                    <p>
+                        Euro
+                    </p>
+
+                </article>
+
+
+                <article class="currency-card">
+
+                    <h3>GBP</h3>
+
+                    <p>
+                        British Pound
+                    </p>
+
+                </article>
+
+
+                <article class="currency-card">
+
+                    <h3>CAD</h3>
+
+                    <p>
+                        Canadian Dollar
+                    </p>
+
+                </article>
+
+
+                <article class="currency-card">
+
+                    <h3>MXN</h3>
+
+                    <p>
+                        Mexican Peso
+                    </p>
+
+                </article>
+
+
+                <article class="currency-card">
+
+                    <h3>BOB</h3>
+
+                    <p>
+                        Bolivian Boliviano
+                    </p>
+
+                </article>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+
+        <div class="footer-bottom">
+
+            <p>
+                &copy; 2026 FinanceHub. All rights reserved.
+            </p>
+
+        </div>
+
+    </footer>
+
+
+    <!-- JAVASCRIPT -->
+    <script
+        type="module"
+        src="js/currency.js">
+    </script>
+
+</body>
+</html>

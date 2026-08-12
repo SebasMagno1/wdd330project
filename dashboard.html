@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description"
+        content="FinanceHub dashboard - View your income, expenses, balance, budget and recent transactions.">
+
+    <title>FinanceHub | Dashboard</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="site-header">
+
+        <div class="header-container">
+
+            <a href="index.html" class="logo">
+                Finance<span>Hub</span>
+            </a>
+
+            <button class="menu-button" aria-label="Open navigation menu">
+                ☰
+            </button>
+
+            <nav class="main-navigation">
+                <ul class="navigation">
+
+                    <li>
+                        <a href="index.html">Home</a>
+                    </li>
+
+                    <li>
+                        <a class="active" href="dashboard.html">
+                            Dashboard
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="transactions.html">
+                            Transactions
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="income.html">
+                            Income
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="expenses.html">
+                            Expenses
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="budget.html">
+                            Budget
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="analytics.html">
+                            Analytics
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="currency.html">
+                            Currency
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="news.html">
+                            Financial News
+                        </a>
+                    </li>
+
+                </ul>
+            </nav>
+
+        </div>
+
+    </header>
+
+
+    <!-- MAIN -->
+    <main class="dashboard-page">
+
+        <!-- PAGE TITLE -->
+        <section class="page-header">
+
+            <h1>
+                Financial Dashboard
+            </h1>
+
+            <p>
+                Overview of your personal finances.
+            </p>
+
+        </section>
+
+
+        <!-- SUMMARY CARDS -->
+        <section class="dashboard-summary">
+
+            <!-- Income -->
+            <article class="summary-card income-card">
+
+                <div class="summary-icon">
+                    💰
+                </div>
+
+                <div>
+                    <h2>
+                        Total Income
+                    </h2>
+
+                    <p id="total-income">
+                        $0.00
+                    </p>
+                </div>
+
+            </article>
+
+
+            <!-- Expenses -->
+            <article class="summary-card expense-card">
+
+                <div class="summary-icon">
+                    💳
+                </div>
+
+                <div>
+                    <h2>
+                        Total Expenses
+                    </h2>
+
+                    <p id="total-expenses">
+                        $0.00
+                    </p>
+                </div>
+
+            </article>
+
+
+            <!-- Balance -->
+            <article class="summary-card balance-card">
+
+                <div class="summary-icon">
+                    💵
+                </div>
+
+                <div>
+                    <h2>
+                        Remaining Balance
+                    </h2>
+
+                    <p id="remaining-balance">
+                        $0.00
+                    </p>
+                </div>
+
+            </article>
+
+
+            <!-- Budget -->
+            <article class="summary-card budget-card">
+
+                <div class="summary-icon">
+                    🎯
+                </div>
+
+                <div>
+                    <h2>
+                        Budget Remaining
+                    </h2>
+
+                    <p id="budget-remaining">
+                        $0.00
+                    </p>
+                </div>
+
+            </article>
+
+        </section>
+
+
+        <!-- DASHBOARD CONTENT -->
+        <section class="dashboard-grid">
+
+
+            <!-- ANALYTICS -->
+            <article class="dashboard-panel chart-panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h2>
+                            Financial Overview
+                        </h2>
+
+                        <p>
+                            Income vs. Expenses
+                        </p>
+                    </div>
+
+                    <a href="analytics.html">
+                        View Analytics →
+                    </a>
+
+                </div>
+
+                <div class="chart-container">
+
+                    <canvas id="income-expense-chart">
+                    </canvas>
+
+                </div>
+
+            </article>
+
+
+            <!-- RECENT TRANSACTIONS -->
+            <article class="dashboard-panel transactions-panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h2>
+                            Recent Transactions
+                        </h2>
+
+                        <p>
+                            Your latest financial activity
+                        </p>
+
+                    </div>
+
+                    <a href="transactions.html">
+                        View All →
+                    </a>
+
+                </div>
+
+
+                <div class="transactions-list" id="recent-transactions">
+
+                    <!-- Transactions will be generated with JavaScript -->
+
+                    <p class="empty-message">
+                        No transactions available.
+                    </p>
+
+                </div>
+
+            </article>
+
+
+            <!-- MONTHLY BUDGET -->
+            <article class="dashboard-panel budget-panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h2>
+                            Monthly Budget
+                        </h2>
+
+                        <p>
+                            Your current budget usage
+                        </p>
+                    </div>
+
+                    <a href="budget.html">
+                        Manage Budget →
+                    </a>
+
+                </div>
+
+
+                <div class="budget-progress">
+
+                    <div class="budget-info">
+
+                        <span>
+                            Spent
+                        </span>
+
+                        <strong id="budget-spent">
+                            $0.00
+                        </strong>
+
+                    </div>
+
+
+                    <div class="progress-bar">
+
+                        <div
+                            class="progress-fill"
+                            id="budget-progress">
+                        </div>
+
+                    </div>
+
+
+                    <div class="budget-info">
+
+                        <span>
+                            Budget
+                        </span>
+
+                        <strong id="monthly-budget">
+                            $0.00
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <!-- QUICK ACTIONS -->
+            <article class="dashboard-panel quick-actions-panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h2>
+                            Quick Actions
+                        </h2>
+
+                        <p>
+                            Manage your finances
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="quick-actions">
+
+                    <a href="income.html" class="action-button">
+                        <span>💰</span>
+                        Add Income
+                    </a>
+
+                    <a href="expenses.html" class="action-button">
+                        <span>💳</span>
+                        Add Expense
+                    </a>
+
+                    <a href="budget.html" class="action-button">
+                        <span>🎯</span>
+                        Set Budget
+                    </a>
+
+                    <a href="currency.html" class="action-button">
+                        <span>💱</span>
+                        Convert Currency
+                    </a>
+
+                </div>
+
+            </article>
+
+
+            <!-- FINANCIAL NEWS -->
+            <article class="dashboard-panel news-panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h2>
+                            Financial News
+                        </h2>
+
+                        <p>
+                            Latest business and financial news
+                        </p>
+                    </div>
+
+                    <a href="news.html">
+                        View News →
+                    </a>
+
+                </div>
+
+
+                <div id="dashboard-news">
+
+                    <article class="news-preview">
+
+                        <h3>
+                            Financial News
+                        </h3>
+
+                        <p>
+                            Latest financial and business news
+                            will appear here.
+                        </p>
+
+                    </article>
+
+                </div>
+
+            </article>
+
+        </section>
+
+    </main>
+
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+
+        <div class="footer-container">
+
+            <div class="footer-brand">
+
+                <h2>
+                    FinanceHub
+                </h2>
+
+                <p>
+                    Your simple personal finance management platform.
+                </p>
+
+            </div>
+
+
+            <div class="footer-links">
+
+                <h3>
+                    Finance
+                </h3>
+
+                <a href="dashboard.html">
+                    Dashboard
+                </a>
+
+                <a href="transactions.html">
+                    Transactions
+                </a>
+
+                <a href="budget.html">
+                    Budget
+                </a>
+
+                <a href="analytics.html">
+                    Analytics
+                </a>
+
+            </div>
+
+
+            <div class="footer-links">
+
+                <h3>
+                    Tools
+                </h3>
+
+                <a href="currency.html">
+                    Currency Converter
+                </a>
+
+                <a href="news.html">
+                    Financial News
+                </a>
+
+                <a href="income.html">
+                    Income
+                </a>
+
+                <a href="expenses.html">
+                    Expenses
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <div class="footer-bottom">
+
+            <p>
+                &copy; 2026 FinanceHub. All rights reserved.
+            </p>
+
+        </div>
+
+    </footer>
+
+
+    <!-- DASHBOARD JAVASCRIPT -->
+    <script type="module" src="js/dashboard.js"></script>
+
+</body>
+</html>
