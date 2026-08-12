@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta name="description"
-        content="FinanceHub income management. Add, edit and delete income records.">
+    <meta
+        name="description"
+        content="FinanceHub income management. Add and manage income records."
+    >
 
     <title>FinanceHub | Income</title>
 
@@ -16,18 +19,22 @@
 
     <!-- HEADER -->
     <header class="site-header">
-
         <div class="header-container">
 
             <a href="index.html" class="logo">
                 Finance<span>Hub</span>
             </a>
 
-            <button class="menu-button" aria-label="Open navigation menu">
+            <button
+                class="menu-button"
+                type="button"
+                aria-label="Open navigation menu">
                 ☰
             </button>
 
-            <nav class="main-navigation">
+            <nav
+                class="main-navigation"
+                aria-label="Main navigation">
 
                 <ul class="navigation">
 
@@ -44,7 +51,10 @@
                     </li>
 
                     <li>
-                        <a class="active" href="income.html">
+                        <a
+                            class="active"
+                            href="income.html"
+                            aria-current="page">
                             Income
                         </a>
                     </li>
@@ -70,11 +80,9 @@
                     </li>
 
                 </ul>
-
             </nav>
 
         </div>
-
     </header>
 
 
@@ -83,9 +91,7 @@
 
         <section class="page-header">
 
-            <h1>
-                Income Management
-            </h1>
+            <h1>Income Management</h1>
 
             <p>
                 Add and manage your income records.
@@ -99,13 +105,10 @@
 
             <div class="form-card">
 
-                <h2>
-                    Add Income
-                </h2>
+                <h2>Add Income</h2>
 
                 <form id="income-form">
 
-                    <!-- Description -->
                     <div class="form-group">
 
                         <label for="income-description">
@@ -117,12 +120,12 @@
                             id="income-description"
                             name="description"
                             placeholder="Example: Monthly salary"
-                            required>
+                            required
+                        >
 
                     </div>
 
 
-                    <!-- Amount -->
                     <div class="form-group">
 
                         <label for="income-amount">
@@ -133,15 +136,15 @@
                             type="number"
                             id="income-amount"
                             name="amount"
-                            min="0"
+                            min="0.01"
                             step="0.01"
                             placeholder="0.00"
-                            required>
+                            required
+                        >
 
                     </div>
 
 
-                    <!-- Category -->
                     <div class="form-group">
 
                         <label for="income-category">
@@ -186,7 +189,6 @@
                     </div>
 
 
-                    <!-- Date -->
                     <div class="form-group">
 
                         <label for="income-date">
@@ -197,12 +199,12 @@
                             type="date"
                             id="income-date"
                             name="date"
-                            required>
+                            required
+                        >
 
                     </div>
 
 
-                    <!-- Notes -->
                     <div class="form-group">
 
                         <label for="income-notes">
@@ -213,29 +215,23 @@
                             id="income-notes"
                             name="notes"
                             rows="4"
-                            placeholder="Optional notes...">
-                        </textarea>
+                            placeholder="Optional notes..."></textarea>
 
                     </div>
 
 
-                    <!-- Buttons -->
                     <div class="form-buttons">
 
                         <button
                             type="submit"
                             class="btn primary-btn">
-
                             Save Income
-
                         </button>
 
                         <button
                             type="reset"
                             class="btn secondary-btn">
-
                             Clear
-
                         </button>
 
                     </div>
@@ -253,31 +249,25 @@
             <div class="section-header">
 
                 <div>
-
-                    <h2>
-                        Recent Income
-                    </h2>
+                    <h2>Recent Income</h2>
 
                     <p>
                         Your latest income records.
                     </p>
-
                 </div>
 
                 <a
                     href="transactions.html"
                     class="btn secondary-btn">
-
                     View Transactions
-
                 </a>
 
             </div>
 
 
             <div
-                class="records-list"
-                id="income-list">
+                id="income-list"
+                class="records-list">
 
                 <p class="empty-message">
                     No income records available.
@@ -291,24 +281,25 @@
 
 
     <!-- FOOTER -->
-<footer class="site-footer">
+    <footer class="site-footer">
 
-    <div class="footer-bottom">
+        <div class="footer-bottom">
 
-        <p>
-            &copy; 2026 FinanceHub. All rights reserved.
-        </p>
+            <p>
+                &copy; 2026 FinanceHub.
+                All rights reserved.
+            </p>
 
-    </div>
+        </div>
 
-</footer>
+    </footer>
 
 
-<!-- JAVASCRIPT -->
-<script
-    type="module"
-    src="scripts/transactions.js">
-</script>
+    <!-- JAVASCRIPT -->
+    <script
+        type="module"
+        src="scripts/income.js">
+    </script>
 
 </body>
 </html>

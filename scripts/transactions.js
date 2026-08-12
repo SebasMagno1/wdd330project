@@ -1,718 +1,158 @@
-/*
- * FinanceHub
- * Transactions Module
- *
- * Handles:
- * - Income
- * - Expenses
- * - Transaction history
- * - Filters
- * - Recent records
- * - Delete transactions
- */
-
-
-/* =========================================================
-   IMPORT STORAGE FUNCTIONS
-   ========================================================= */
-
-import { 
-    getTransactions,
-    addTransaction,
+import {getTransactions,
     deleteTransaction
 } from "./storage.js";
 
 
-document.addEventListener("DOMContentLoaded",
-    () => {
+const filters =
+    document.querySelector("#transaction-filters");
 
-        initializeTransactions();
+const transactionList =
+    document.querySelector("#transactions-list");
 
-    }
+const clearButton =
+    document.querySelector("#clear-filters");
+
+
+document.addEventListener(
+    "DOMContentLoaded",
+    initializeTransactions
 );
 
 
 /* =========================================================
-   INITIALIZE TRANSACTIONS MODULE
+   INITIALIZE
    ========================================================= */
 
 function initializeTransactions() {
 
-    const incomeForm =
-        document.querySelector("#income-form");
-
-    const expenseForm =
-        document.querySelector("#expense-form");
-
-    const transactionsList =
-        document.querySelector("#transactions-list");
+    renderTransactions();
 
 
-    /* ---------------------------------------------------------
-       INCOME PAGE
-       --------------------------------------------------------- */
-
-    if (incomeForm) {
-
-        setupIncomeForm();
-        displayIncome();
-
-    }
-
-
-    /* ---------------------------------------------------------
-       EXPENSE PAGE
-       --------------------------------------------------------- */
-
-    if (expenseForm) {
-
-        setupExpenseForm();
-        displayExpenses();
-
-    }
-
-
-    /* ---------------------------------------------------------
-       TRANSACTIONS PAGE
-       --------------------------------------------------------- */
-
-    if (transactionsList) {
-
-        setupTransactionFilters();
-        setupTransactionsPage();
-
-    }
-
-}
-
-
-/* =========================================================
-   INCOME FORM
-   ========================================================= */
-
-function setupIncomeForm() {
-
-    const form =
-        document.querySelector(
-            "#income-form"
-        );
-
-
-    if (!form) {
-        return;
-    }
-
-
-    form.addEventListener(
+    filters?.addEventListener(
         "submit",
-        event => {
-
-            event.preventDefault();
-
-
-            /* -------------------------------------------------
-               GET FORM VALUES
-               ------------------------------------------------- */
-
-            const description =
-                document.querySelector(
-                    "#income-description"
-                )?.value.trim();
-
-
-            const amount =
-                Number(
-                    document.querySelector(
-                        "#income-amount"
-                    )?.value
-                );
-
-
-            const category =
-                document.querySelector(
-                    "#income-category"
-                )?.value;
-
-
-            const date =
-                document.querySelector(
-                    "#income-date"
-                )?.value;
-
-
-            const notes =
-                document.querySelector(
-                    "#income-notes"
-                )?.value.trim();
-
-
-            /* -------------------------------------------------
-               VALIDATE
-               ------------------------------------------------- */
-
-            if (
-                !description ||
-                !Number.isFinite(amount) ||
-                amount <= 0 ||
-                !category ||
-                !date
-            ) {
-
-                alert(
-                    "Please complete all required fields."
-                );
-
-                return;
-
-            }
-
-
-            /* -------------------------------------------------
-               CREATE TRANSACTION
-               ------------------------------------------------- */
-
-            const transaction =
-                addTransaction({
-
-                    type:
-                        "income",
-
-                    description,
-
-                    amount,
-
-                    category,
-
-                    date,
-
-                    notes,
-
-                    paymentMethod:
-                        ""
-
-                });
-
-
-            /* -------------------------------------------------
-               CHECK SAVE
-               ------------------------------------------------- */
-
-            if (!transaction) {
-
-                alert(
-                    "Unable to save income."
-                );
-
-                return;
-
-            }
-
-
-            /* -------------------------------------------------
-               RESET FORM
-               ------------------------------------------------- */
-
-            form.reset();
-
-
-            /* -------------------------------------------------
-               REFRESH LIST
-               ------------------------------------------------- */
-
-            displayIncome();
-
-
-            /* -------------------------------------------------
-               SUCCESS MESSAGE
-               ------------------------------------------------- */
-
-            showSuccessMessage(
-                "Income saved successfully."
-            );
-
-        }
+        handleFilter
     );
 
-}
 
-
-/* =========================================================
-   EXPENSE FORM
-   ========================================================= */
-
-function setupExpenseForm() {
-
-    const form =
-        document.querySelector(
-            "#expense-form"
-        );
-
-
-    if (!form) {
-        return;
-    }
-
-
-    form.addEventListener(
-        "submit",
-        event => {
-
-            event.preventDefault();
-
-
-            /* -------------------------------------------------
-               GET FORM VALUES
-               ------------------------------------------------- */
-
-            const description =
-                document.querySelector(
-                    "#expense-description"
-                )?.value.trim();
-
-
-            const amount =
-                Number(
-                    document.querySelector(
-                        "#expense-amount"
-                    )?.value
-                );
-
-
-            const category =
-                document.querySelector(
-                    "#expense-category"
-                )?.value;
-
-
-            const date =
-                document.querySelector(
-                    "#expense-date"
-                )?.value;
-
-
-            const paymentMethod =
-                document.querySelector(
-                    "#payment-method"
-                )?.value || "";
-
-
-            const notes =
-                document.querySelector(
-                    "#expense-notes"
-                )?.value.trim();
-
-
-            /* -------------------------------------------------
-               VALIDATE
-               ------------------------------------------------- */
-
-            if (
-                !description ||
-                !Number.isFinite(amount) ||
-                amount <= 0 ||
-                !category ||
-                !date
-            ) {
-
-                alert(
-                    "Please complete all required fields."
-                );
-
-                return;
-
-            }
-
-
-            /* -------------------------------------------------
-               CREATE TRANSACTION
-               ------------------------------------------------- */
-
-            const transaction =
-                addTransaction({
-
-                    type:
-                        "expense",
-
-                    description,
-
-                    amount,
-
-                    category,
-
-                    date,
-
-                    notes,
-
-                    paymentMethod
-
-                });
-
-
-            /* -------------------------------------------------
-               CHECK SAVE
-               ------------------------------------------------- */
-
-            if (!transaction) {
-
-                alert(
-                    "Unable to save expense."
-                );
-
-                return;
-
-            }
-
-
-            /* -------------------------------------------------
-               RESET FORM
-               ------------------------------------------------- */
-
-            form.reset();
-
-
-            /* -------------------------------------------------
-               REFRESH LIST
-               ------------------------------------------------- */
-
-            displayExpenses();
-
-
-            /* -------------------------------------------------
-               SUCCESS MESSAGE
-               ------------------------------------------------- */
-
-            showSuccessMessage(
-                "Expense saved successfully."
-            );
-
-        }
+    clearButton?.addEventListener(
+        "click",
+        clearFilters
     );
 
+
+    transactionList?.addEventListener(
+        "click",
+        handleTransactionActions
+    );
 }
 
 
 /* =========================================================
-   DISPLAY INCOME
+   FILTER
    ========================================================= */
 
-function displayIncome() {
+function handleFilter(event) {
 
-    const list =
-        document.querySelector(
-            "#income-list"
-        );
+    event.preventDefault();
 
-
-    if (!list) {
-        return;
-    }
-
-
-    const transactions =
-        getTransactions();
-
-
-    const income =
-        transactions
-            .filter(
-                transaction =>
-                    transaction.type ===
-                    "income"
-            )
-            .sort(
-                (a, b) =>
-                    new Date(b.date) -
-                    new Date(a.date)
-            )
-            .slice(0, 10);
-
-
-    /* -------------------------------------------------------
-       EMPTY STATE
-       ------------------------------------------------------- */
-
-    if (!income.length) {
-
-        list.innerHTML = `
-            <p class="empty-message">
-                No income records available.
-            </p>
-        `;
-
-        return;
-
-    }
-
-
-    /* -------------------------------------------------------
-       RENDER
-       ------------------------------------------------------- */
-
-    list.innerHTML =
-        income
-            .map(
-                transaction =>
-                    createIncomeExpenseHTML(
-                        transaction
-                    )
-            )
-            .join("");
-
-
-    attachDeleteButtons();
-
+    renderTransactions();
 }
 
 
 /* =========================================================
-   DISPLAY EXPENSES
+   CLEAR FILTERS
    ========================================================= */
 
-function displayExpenses() {
+function clearFilters() {
 
-    const list =
-        document.querySelector(
-            "#expense-list"
-        );
+    filters?.reset();
 
-
-    if (!list) {
-        return;
-    }
-
-
-    const transactions =
-        getTransactions();
-
-
-    const expenses =
-        transactions
-            .filter(
-                transaction =>
-                    transaction.type ===
-                    "expense"
-            )
-            .sort(
-                (a, b) =>
-                    new Date(b.date) -
-                    new Date(a.date)
-            )
-            .slice(0, 10);
-
-
-    /* -------------------------------------------------------
-       EMPTY STATE
-       ------------------------------------------------------- */
-
-    if (!expenses.length) {
-
-        list.innerHTML = `
-            <p class="empty-message">
-                No expense records available.
-            </p>
-        `;
-
-        return;
-
-    }
-
-
-    /* -------------------------------------------------------
-       RENDER
-       ------------------------------------------------------- */
-
-    list.innerHTML =
-        expenses
-            .map(
-                transaction =>
-                    createIncomeExpenseHTML(
-                        transaction
-                    )
-            )
-            .join("");
-
-
-    attachDeleteButtons();
-
+    renderTransactions();
 }
 
 
 /* =========================================================
-   CREATE INCOME / EXPENSE CARD
+   GET FILTER VALUES
    ========================================================= */
 
-function createIncomeExpenseHTML(
-    transaction
+function getFilterValues() {
+
+    return {
+
+        type:
+            document.querySelector(
+                "#transaction-type"
+            )?.value || "all",
+
+        category:
+            document.querySelector(
+                "#transaction-category"
+            )?.value || "all",
+
+        startDate:
+            document.querySelector(
+                "#start-date"
+            )?.value || "",
+
+        endDate:
+            document.querySelector(
+                "#end-date"
+            )?.value || ""
+
+    };
+}
+
+
+/* =========================================================
+   FILTER TRANSACTIONS
+   ========================================================= */
+
+function filterTransactions(
+    transactions,
+    filters
 ) {
 
-    const typeLabel =
-        transaction.type === "income"
-            ? "Income"
-            : "Expense";
+    return transactions.filter(
+        transaction => {
+
+            const matchesType =
+                filters.type === "all" ||
+                transaction.type === filters.type;
 
 
-    const typeClass =
-        transaction.type === "income"
-            ? "income"
-            : "expense";
+            const matchesCategory =
+                filters.category === "all" ||
+                transaction.category === filters.category;
 
 
-    return `
-        <article
-            class="transaction-item ${typeClass}">
-
-            <div class="transaction-info">
-
-                <h3>
-                    ${escapeHTML(
-                        transaction.description
-                    )}
-                </h3>
-
-                <p>
-                    ${escapeHTML(
-                        transaction.category
-                    )}
-                </p>
-
-                <p>
-                    ${formatDate(
-                        transaction.date
-                    )}
-                </p>
-
-            </div>
+            const matchesStartDate =
+                !filters.startDate ||
+                transaction.date >= filters.startDate;
 
 
-            <div class="transaction-amount">
-
-                <span class="transaction-type">
-                    ${typeLabel}
-                </span>
-
-                <strong>
-                    ${formatCurrency(
-                        transaction.amount
-                    )}
-                </strong>
-
-            </div>
+            const matchesEndDate =
+                !filters.endDate ||
+                transaction.date <= filters.endDate;
 
 
-            <div class="transaction-actions">
-
-                <button
-                    type="button"
-                    class="delete-transaction"
-                    data-id="${transaction.id}">
-
-                    Delete
-
-                </button>
-
-            </div>
-
-        </article>
-    `;
-}
-
-
-/* =========================================================
-   TRANSACTIONS PAGE
-   ========================================================= */
-
-function setupTransactionsPage() {
-
-    const list =
-        document.querySelector(
-            "#transactions-list"
-        );
-
-
-    if (!list) {
-        return;
-    }
-
-
-    displayAllTransactions();
-
-}
-
-
-/* =========================================================
-   TRANSACTION FILTERS
-   ========================================================= */
-
-function setupTransactionFilters() {
-
-    const form =
-        document.querySelector(
-            "#transaction-filters"
-        );
-
-
-    if (!form) {
-        return;
-    }
-
-
-    /* -------------------------------------------------------
-       FILTER
-       ------------------------------------------------------- */
-
-    form.addEventListener(
-        "submit",
-        event => {
-
-            event.preventDefault();
-
-            displayAllTransactions();
-
+            return (
+                matchesType &&
+                matchesCategory &&
+                matchesStartDate &&
+                matchesEndDate
+            );
         }
     );
-
-
-    /* -------------------------------------------------------
-       CLEAR FILTERS
-       ------------------------------------------------------- */
-
-    const clearButton =
-        document.querySelector(
-            "#clear-filters"
-        );
-
-
-    if (clearButton) {
-
-        clearButton.addEventListener(
-            "click",
-            () => {
-
-                form.reset();
-
-                displayAllTransactions();
-
-            }
-        );
-
-    }
-
 }
 
 
 /* =========================================================
-   DISPLAY ALL TRANSACTIONS
+   DISPLAY TRANSACTIONS
    ========================================================= */
 
-function displayAllTransactions() {
+function renderTransactions() {
 
-    const list =
-        document.querySelector(
-            "#transactions-list"
-        );
-
-
-    if (!list) {
+    if (!transactionList) {
         return;
     }
 
@@ -721,100 +161,16 @@ function displayAllTransactions() {
         getTransactions();
 
 
-    /* =====================================================
-       FILTER VALUES
-       ===================================================== */
-
-    const type =
-        document.querySelector(
-            "#transaction-type"
-        )?.value || "all";
+    const filterValues =
+        getFilterValues();
 
 
-    const category =
-        document.querySelector(
-            "#transaction-category"
-        )?.value || "all";
+    transactions =
+        filterTransactions(
+            transactions,
+            filterValues
+        );
 
-
-    const startDate =
-        document.querySelector(
-            "#start-date"
-        )?.value || "";
-
-
-    const endDate =
-        document.querySelector(
-            "#end-date"
-        )?.value || "";
-
-
-    /* =====================================================
-       FILTER TYPE
-       ===================================================== */
-
-    if (type !== "all") {
-
-        transactions =
-            transactions.filter(
-                transaction =>
-                    transaction.type === type
-            );
-
-    }
-
-
-    /* =====================================================
-       FILTER CATEGORY
-       ===================================================== */
-
-    if (category !== "all") {
-
-        transactions =
-            transactions.filter(
-                transaction =>
-                    transaction.category ===
-                    category
-            );
-
-    }
-
-
-    /* =====================================================
-       FILTER START DATE
-       ===================================================== */
-
-    if (startDate) {
-
-        transactions =
-            transactions.filter(
-                transaction =>
-                    transaction.date >=
-                    startDate
-            );
-
-    }
-
-
-    /* =====================================================
-       FILTER END DATE
-       ===================================================== */
-
-    if (endDate) {
-
-        transactions =
-            transactions.filter(
-                transaction =>
-                    transaction.date <=
-                    endDate
-            );
-
-    }
-
-
-    /* =====================================================
-       SORT BY DATE
-       ===================================================== */
 
     transactions.sort(
         (a, b) =>
@@ -823,92 +179,79 @@ function displayAllTransactions() {
     );
 
 
-    /* =====================================================
-       EMPTY STATE
-       ===================================================== */
+
 
     if (!transactions.length) {
 
-        list.innerHTML = `
+        transactionList.innerHTML = `
             <tr>
-
-                <td colspan="6">
-
+    
+            <td colspan="6">
                     No transactions match
                     your filters.
-
-                </td>
-
+    
+                    </td>
             </tr>
         `;
 
         return;
-
+    
     }
 
 
-    /* =====================================================
-       RENDER TABLE
-       ===================================================== */
-
-    list.innerHTML =
+    transactionList.innerHTML =
         transactions
-            .map(
-                transaction =>
-                    createTransactionHTML(
-                        transaction
-                    )
-            )
+            .map(createTransactionRow)
             .join("");
 
-
-    attachDeleteButtons();
-
-}
+        }
 
 
 /* =========================================================
-   CREATE TRANSACTION TABLE ROW
+   CREATE TABLE ROW
    ========================================================= */
 
-function createTransactionHTML(
+function createTransactionRow(
     transaction
 ) {
 
-    const typeLabel =
-        transaction.type === "income"
-            ? "Income"
-            : "Expense";
+    const isIncome =
+        transaction.type === "income";
 
 
     const typeClass =
-        transaction.type === "income"
+        isIncome
             ? "income"
             : "expense";
 
 
+    const typeLabel =
+        isIncome
+            ? "Income"
+            : "Expense";
+
+
+    const amountPrefix =
+        isIncome
+            ? "+"
+            : "-";
+
+
     return `
-        <tr
-            class="transaction-row ${typeClass}">
+        <tr class="transaction-row ${typeClass}">
 
             <td>
-                ${formatDate(
-                    transaction.date
-                )}
+                ${formatDate(transaction.date)}
             </td>
 
 
             <td>
-                ${escapeHTML(
-                    transaction.description
-                )}
+                ${escapeHTML(transaction.description)}
             </td>
 
 
             <td>
-                ${escapeHTML(
-                    transaction.category
-                )}
+                ${escapeHTML(transaction.category)}
             </td>
 
 
@@ -924,10 +267,9 @@ function createTransactionHTML(
             </td>
 
 
-            <td
-                class="${typeClass}">
+            <td class="${typeClass}">
 
-                ${formatCurrency(
+                ${amountPrefix}${formatCurrency(
                     transaction.amount
                 )}
 
@@ -954,137 +296,102 @@ function createTransactionHTML(
 
 
 /* =========================================================
-   DELETE BUTTONS
+   DELETE TRANSACTION
    ========================================================= */
 
-function attachDeleteButtons() {
+function handleTransactionActions(event) {
 
-    const buttons =
-        document.querySelectorAll(
+    const button =
+        event.target.closest(
             ".delete-transaction"
         );
 
 
-    buttons.forEach(
-        button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    const id =
-                        button.dataset.id;
+    if (!button) {
+        return;
+    }
 
 
-                    if (!id) {
-                        return;
-                    }
+
+    const id =
+        button.dataset.id;
 
 
-                    const confirmed =
-                        confirm(
-                            "Are you sure you want to delete this transaction?"
-                        );
+    if (!id) {
+        return;
+    }
 
 
-                    if (!confirmed) {
-                        return;
-                    }
+    const confirmed =
+        confirm(
+            "Are you sure you want to delete this transaction?"
+        );
 
 
-                    const deleted =
-                        deleteTransaction(
-                            id
-                        );
+    if (!confirmed) {
+        return;
+    }
 
 
-                    if (!deleted) {
-
-                        alert(
-                            "Unable to delete transaction."
-                        );
-
-                        return;
-
-                    }
+    const deleted =
+        deleteTransaction(id);
 
 
-                    /* -----------------------------------------
-                       REFRESH CURRENT CONTENT
-                       ----------------------------------------- */
+    if (!deleted) {
 
-                    displayIncome();
+        showMessage(
+            "Unable to delete transaction.",
+            "error"
+        );
 
-                    displayExpenses();
+        return;
+    }
 
-                    displayAllTransactions();
 
-                }
-            );
+    renderTransactions();
 
-        }
+
+    showMessage(
+        "Transaction deleted successfully.",
+        "success"
     );
 
 }
 
 
 /* =========================================================
-   SUCCESS MESSAGE
+   MESSAGE
    ========================================================= */
 
-function showSuccessMessage(
-    message
+function showMessage(
+    message,
+    type = "success"
 ) {
 
-    const existing =
-        document.querySelector(
-            ".success-message"
-        );
-
-
-    if (existing) {
-        existing.remove();
-    }
+    document
+        .querySelector(".page-message")
+        ?.remove();
 
 
     const element =
-        document.createElement(
-            "p"
-        );
+        document.createElement("p");
 
 
     element.className =
-        "success-message";
+        `page-message ${type}`;
 
 
     element.textContent =
         message;
 
 
-    const main =
-        document.querySelector(
-            "main"
-        );
-
-
-    if (!main) {
-        return;
-    }
-
-
-    main.prepend(
-        element
-    );
+    document
+        .querySelector("main")
+        ?.prepend(element);
 
 
     setTimeout(
-        () => {
-
-            if (element) {
-                element.remove();
-            }
-
-        },
+        () => element.remove(),
         3000
     );
 
@@ -1095,9 +402,7 @@ function showSuccessMessage(
    FORMAT CURRENCY
    ========================================================= */
 
-function formatCurrency(
-    amount
-) {
+function formatCurrency(amount) {
 
     return new Intl.NumberFormat(
         "en-US",
@@ -1116,9 +421,7 @@ function formatCurrency(
    FORMAT DATE
    ========================================================= */
 
-function formatDate(
-    dateString
-) {
+function formatDate(dateString) {
 
     if (!dateString) {
         return "No date";
@@ -1158,32 +461,12 @@ function formatDate(
    ESCAPE HTML
    ========================================================= */
 
-function escapeHTML(
-    value
-) {
+function escapeHTML(value) {
 
-    return String(
-        value ?? ""
-    )
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }

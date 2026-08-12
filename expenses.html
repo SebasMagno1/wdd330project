@@ -1,16 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta name="description"
-        content="FinanceHub expense management. Add, edit and delete expense records.">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="description"
+        content="FinanceHub expense management. Add and manage expense records.">
 
     <title>FinanceHub | Expenses</title>
 
-    <link rel="stylesheet" href="css/style.css">
+    <link
+        rel="stylesheet"
+        href="css/style.css">
+
 </head>
+
 
 <body>
 
@@ -19,12 +29,18 @@
 
         <div class="header-container">
 
-            <a href="index.html" class="logo">
+            <a
+                href="index.html"
+                class="logo">
+
                 Finance<span>Hub</span>
+
             </a>
+
 
             <button
                 class="menu-button"
+                type="button"
                 aria-label="Open navigation menu">
 
                 ☰
@@ -32,8 +48,9 @@
             </button>
 
 
-            <!-- NAVIGATION -->
-            <nav class="main-navigation">
+            <nav
+                class="main-navigation"
+                aria-label="Main navigation">
 
                 <ul class="navigation">
 
@@ -62,7 +79,10 @@
                     </li>
 
                     <li>
-                        <a class="active" href="expenses.html">
+                        <a
+                            class="active"
+                            href="expenses.html"
+                            aria-current="page">
                             Expenses
                         </a>
                     </li>
@@ -103,8 +123,7 @@
     <!-- MAIN -->
     <main class="expenses-page">
 
-
-        <!-- PAGE HEADER -->
+        
         <section class="page-header">
 
             <h1>
@@ -130,8 +149,7 @@
 
                 <form id="expense-form">
 
-
-                    <!-- DESCRIPTION -->
+                    
                     <div class="form-group">
 
                         <label for="expense-description">
@@ -148,7 +166,7 @@
                     </div>
 
 
-                    <!-- AMOUNT -->
+
                     <div class="form-group">
 
                         <label for="expense-amount">
@@ -159,7 +177,7 @@
                             type="number"
                             id="expense-amount"
                             name="amount"
-                            min="0"
+                            min="0.01"
                             step="0.01"
                             placeholder="0.00"
                             required>
@@ -167,7 +185,7 @@
                     </div>
 
 
-                    <!-- CATEGORY -->
+
                     <div class="form-group">
 
                         <label for="expense-category">
@@ -224,7 +242,7 @@
                     </div>
 
 
-                    <!-- DATE -->
+
                     <div class="form-group">
 
                         <label for="expense-date">
@@ -240,7 +258,7 @@
                     </div>
 
 
-                    <!-- PAYMENT METHOD -->
+
                     <div class="form-group">
 
                         <label for="payment-method">
@@ -280,7 +298,7 @@
                     </div>
 
 
-                    <!-- NOTES -->
+
                     <div class="form-group">
 
                         <label for="expense-notes">
@@ -291,13 +309,12 @@
                             id="expense-notes"
                             name="notes"
                             rows="4"
-                            placeholder="Optional notes...">
-                        </textarea>
+                            placeholder="Optional notes..."></textarea>
 
                     </div>
 
 
-                    <!-- BUTTONS -->
+                    
                     <div class="form-buttons">
 
                         <button
@@ -356,8 +373,8 @@
 
 
             <div
-                class="records-list"
-                id="expense-list">
+                id="expense-list"
+                class="records-list">
 
                 <p class="empty-message">
                     No expense records available.
@@ -374,21 +391,22 @@
     <footer class="site-footer">
 
         <div class="footer-bottom">
-            
+
             <p>
-                &copy; 2026 FinanceHub. All rights reserved.
+                &copy; 2026 FinanceHub.
+                All rights reserved.
             </p>
 
-    </div>
+        </div>
 
-</footer>
+    </footer>
 
 
-<!-- JAVASCRIPT -->
-<script
-    type="module"
-    src="scripts/transactions.js">
-</script>
+    <!-- JAVASCRIPT -->
+    <script
+        type="module"
+        src="scripts/expenses.js">
+    </script>
 
 </body>
 </html>

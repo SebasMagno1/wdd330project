@@ -13,9 +13,7 @@
         name="description"
         content="FinanceHub transaction history. View, filter and manage financial transactions.">
 
-    <title>
-        FinanceHub | Transactions
-    </title>
+    <title>FinanceHub | Transactions</title>
 
     <link
         rel="stylesheet"
@@ -25,11 +23,11 @@
 
 
 <body>
-
-
+    
     <!-- HEADER -->
-
+    
     <header class="site-header">
+
 
         <div class="header-container">
 
@@ -45,6 +43,7 @@
 
             <button
                 class="menu-button"
+                type="button"
                 aria-label="Open navigation menu">
 
                 ☰
@@ -76,10 +75,10 @@
                     <li>
                         <a
                             class="active"
-                            href="transactions.html">
-
+                            href="transactions.html"
+                            aria-current="page">
                             Transactions
-
+                    
                         </a>
                     </li>
 
@@ -137,12 +136,12 @@
 
 
     <!-- MAIN -->
-
+    
     <main class="transactions-page">
 
 
         <!-- PAGE HEADER -->
-
+        
         <section class="page-header">
 
             <h1>
@@ -150,7 +149,7 @@
             </h1>
 
             <p>
-                View and manage all your financial transactions.
+                View, filter and manage your financial transactions.
             </p>
 
         </section>
@@ -158,26 +157,19 @@
 
 
         <!-- FILTERS -->
-
+        
         <section class="filters-section">
 
-            <form
-                id="transaction-filters">
-
+            <form id="transaction-filters">
 
                 <div class="form-group">
 
-                    <label
-                        for="transaction-type">
-
+                    <label for="transaction-type">
                         Type
-
+        
                     </label>
 
-
-                    <select
-                        id="transaction-type"
-                        name="type">
+                    <select id="transaction-type">
 
                         <option value="all">
                             All
@@ -199,20 +191,35 @@
 
                 <div class="form-group">
 
-                    <label
-                        for="transaction-category">
-
+                    <label for="transaction-category">
                         Category
-
+                
                     </label>
 
-
-                    <select
-                        id="transaction-category"
-                        name="category">
+                    <select id="transaction-category">
 
                         <option value="all">
                             All Categories
+                        </option>
+
+                        <option value="Salary">
+                            Salary
+                        </option>
+
+                        <option value="Freelance">
+                            Freelance
+                        </option>
+
+                        <option value="Business">
+                            Business
+                        </option>
+
+                        <option value="Investment">
+                            Investment
+                        </option>
+
+                        <option value="Gift">
+                            Gift
                         </option>
 
                         <option value="Food">
@@ -247,25 +254,7 @@
                             Housing
                         </option>
 
-                        <option value="Salary">
-                            Salary
-                        </option>
 
-                        <option value="Freelance">
-                            Freelance
-                        </option>
-
-                        <option value="Business">
-                            Business
-                        </option>
-
-                        <option value="Investment">
-                            Investment
-                        </option>
-
-                        <option value="Gift">
-                            Gift
-                        </option>
 
                         <option value="Other">
                             Other
@@ -279,18 +268,15 @@
 
                 <div class="form-group">
 
-                    <label
-                        for="start-date">
-
+                    <label for="start-date">
                         From
-
+                
                     </label>
 
 
                     <input
                         type="date"
-                        id="start-date"
-                        name="startDate">
+                        id="start-date">
 
                 </div>
 
@@ -298,51 +284,49 @@
 
                 <div class="form-group">
 
-                    <label
-                        for="end-date">
-
+                    <label for="end-date">
                         To
-
+                
                     </label>
 
 
                     <input
                         type="date"
-                        id="end-date"
-                        name="endDate">
+                        id="end-date">
 
                 </div>
 
 
+                <div class="form-buttons">
 
-                <button
-                    type="submit"
-                    class="btn primary-btn">
+                    <button
+                        type="submit"
+                        class="btn primary-btn">
 
-                    Filter
+                        Filter
 
-                </button>
+                    </button>
 
 
 
-                <button
-                    type="button"
-                    id="clear-filters"
-                    class="btn secondary-btn">
+                    <button
+                        type="button"
+                        id="clear-filters"
+                        class="btn secondary-btn">
 
-                    Clear
+                        Clear
 
-                </button>
+                    </button>
 
+                </div>
 
             </form>
 
         </section>
 
 
-
-        <!-- TRANSACTIONS TABLE -->
-
+        <!-- TRANSACTIONS -->
+         
         <section class="transactions-table-section">
 
 
@@ -388,9 +372,7 @@
 
             <div class="table-container">
 
-                <table
-                    id="transactions-table">
-
+                <table id="transactions-table">
 
                     <thead>
 
@@ -424,36 +406,34 @@
 
                     </thead>
 
-                    <tbody
-                        id="transactions-list">
+
+                    <tbody id="transactions-list">
 
                         <tr>
 
-                            <td
-                                colspan="6">
-
+                            <td colspan="6">
                                 No transactions available.
-
+            
                             </td>
 
                         </tr>
 
                     </tbody>
 
-
+            
                 </table>
 
             </div>
 
         </section>
 
-
+    
     </main>
 
 
 
     <!-- FOOTER -->
-
+    
     <footer class="site-footer">
 
         <div class="footer-bottom">
@@ -470,13 +450,11 @@
 
 
     <!-- JAVASCRIPT -->
-
+    
     <script
         type="module"
         src="scripts/transactions.js">
     </script>
 
-
-</body>
-
+    </body>
 </html>
