@@ -2,10 +2,12 @@
  * FinanceHub
  * Dashboard Module
  *
- * Responsibilities:
- * - Summary cards
- * - Income / Expense chart
+ * Displays:
+ * - Total income
+ * - Total expenses
+ * - Balance
  * - Current month budget
+ * - Current month budget remaining
  * - Recent transactions
  */
 
@@ -16,25 +18,20 @@ import {
 
 
 /* =========================================================
-   CONFIGURATION
-   ========================================================= */
-
-const CURRENCY = "USD";
-
-let incomeExpenseChart = null;
-
-
-/* =========================================================
    INITIALIZE
    ========================================================= */
 
 document.addEventListener(
     "DOMContentLoaded",
-    initializeDashboard
+    updateDashboard
 );
 
 
-function initializeDashboard() {
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+
+function updateDashboard() {
 
     const transactions =
         getTransactions();
@@ -42,52 +39,61 @@ function initializeDashboard() {
     const budgets =
         getBudgets();
 
+
+    /* -----------------------------------------------------
+       CURRENT MONTH
+       Format: YYYY-MM
+       ----------------------------------------------------- */
+
     const currentMonth =
         getCurrentMonth();
 
 
-    updateSummary(
-        transactions,
-        budgets,
-        currentMonth
-    );
-
-
-    displayRecentTransactions(
-        transactions
-    );
-
-
-    createIncomeExpenseChart(
-        transactions,
-        currentMonth
-    );
-}
-
-
-/* =========================================================
-   SUMMARY
-   ========================================================= */
-
-function updateSummary(
-    transactions,
-    budgets,
-    currentMonth
-) {
+    /* -----------------------------------------------------
+       TOTAL INCOME
+       ----------------------------------------------------- */
 
     const totalIncome =
-        calculateTotal(
-            transactions,
-            "income"
-        );
+        transactions
+            .filter(
+                transaction =>
+                    transaction.type ===
+                    "income"
+            )
+            .reduce(
+                (total, transaction) =>
+                    total +
+                    Number(
+                        transaction.amount || 0
+                    ),
+                0
+            );
 
+
+    /* -----------------------------------------------------
+       TOTAL EXPENSES
+       ----------------------------------------------------- */
 
     const totalExpenses =
-        calculateTotal(
-            transactions,
-            "expense"
-        );
+        transactions
+            .filter(
+                transaction =>
+                    transaction.type ===
+                    "expense"
+            )
+            .reduce(
+                (total, transaction) =>
+                    total +
+                    Number(
+                        transaction.amount || 0
+                    ),
+                0
+            );
 
+
+    /* -----------------------------------------------------
+       BALANCE
+       ----------------------------------------------------- */
 
     const balance =
         totalIncome -
@@ -95,10 +101,10 @@ function updateSummary(
 
 
     /* -----------------------------------------------------
-       CURRENT MONTH BUDGET
+       CURRENT MONTH BUDGETS
        ----------------------------------------------------- */
 
-    const monthlyBudgets =
+    const currentMonthBudgets =
         budgets.filter(
             budget =>
                 budget.month ===
@@ -106,8 +112,12 @@ function updateSummary(
         );
 
 
-    const totalBudget =
-        monthlyBudgets.reduce(
+    /* -----------------------------------------------------
+       CURRENT MONTH BUDGET TOTAL
+       ----------------------------------------------------- */
+
+    const monthlyBudget =
+        currentMonthBudgets.reduce(
             (total, budget) =>
                 total +
                 Number(
@@ -124,12 +134,18 @@ function updateSummary(
     const monthlyExpenses =
         transactions
             .filter(
-                transaction =>
-                    transaction.type ===
-                    "expense" &&
-                    transaction.date?.startsWith(
-                        currentMonth
-                    )
+                transaction => {
+
+                    return (
+                        transaction.type ===
+                            "expense" &&
+
+                        transaction.date
+                            ?.substring(0, 7) ===
+                            currentMonth
+                    );
+
+                }
             )
             .reduce(
                 (total, transaction) =>
@@ -141,85 +157,140 @@ function updateSummary(
             );
 
 
-
+    /* -----------------------------------------------------
+       REMAINING MONTHLY BUDGET
+       ----------------------------------------------------- */
 
     const budgetRemaining =
-        totalBudget -
+        monthlyBudget -
         monthlyExpenses;
 
 
     /* -----------------------------------------------------
-       UPDATE CARDS
+       SUMMARY CARDS
        ----------------------------------------------------- */
 
     updateElement(
         "#total-income",
-        formatCurrency(totalIncome)
+        formatCurrency(
+            totalIncome
+        )
     );
 
 
     updateElement(
         "#total-expenses",
-        formatCurrency(totalExpenses)
+        formatCurrency(
+            totalExpenses
+        )
     );
 
 
     updateElement(
         "#remaining-balance",
-        formatCurrency(balance)
-    );
-
-
-    
-
-    updateElement(
-        "#monthly-budget",
-        formatCurrency(totalBudget)
-    );
-
-
-    updateElement(
-        "#budget-spent",
-        formatCurrency(monthlyExpenses)
+        formatCurrency(
+            balance
+        )
     );
 
 
     updateElement(
         "#budget-remaining",
-        formatCurrency(budgetRemaining)
+        formatCurrency(
+            budgetRemaining
+        )
     );
 
+
+    /* -----------------------------------------------------
+       MONTHLY BUDGET SECTION
+       ----------------------------------------------------- */
+
+    updateElement(
+        "#monthly-budget",
+        formatCurrency(
+            monthlyBudget
+        )
+    );
+
+
+    updateElement(
+        "#budget-spent",
+        formatCurrency(
+            monthlyExpenses
+        )
+    );
+
+
+    /* -----------------------------------------------------
+       BUDGET PROGRESS
+       ----------------------------------------------------- */
 
     updateBudgetProgress(
-        totalBudget,
+        monthlyBudget,
         monthlyExpenses
     );
-   
+
+
+    /* -----------------------------------------------------
+       RECENT TRANSACTIONS
+       ----------------------------------------------------- */
+
+    displayRecentTransactions(
+        transactions
+    );
 }
 
 
 /* =========================================================
-   CALCULATE TOTAL
+   CURRENT MONTH
    ========================================================= */
 
-function calculateTotal(
-    transactions,
-    type
+function getCurrentMonth() {
+
+    const date =
+        new Date();
+
+
+    const year =
+        date.getFullYear();
+
+
+    const month =
+        String(
+            date.getMonth() + 1
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    return `${year}-${month}`;
+}
+
+
+/* =========================================================
+   UPDATE ELEMENT
+   ========================================================= */
+
+function updateElement(
+    selector,
+    value
 ) {
 
-    return transactions
-        .filter(
-            transaction =>
-                transaction.type === type
-        )
-        .reduce(
-            (total, transaction) =>
-                total +
-                Number(
-                    transaction.amount || 0
-                ),
-            0
+    const element =
+        document.querySelector(
+            selector
         );
+
+
+    if (!element) {
+        return;
+    }
+
+
+    element.textContent =
+        value;
 }
 
 
@@ -248,42 +319,22 @@ function updateBudgetProgress(
         budget <= 0
     ) {
 
-        progress.style.width = "0%";
-
-        progress.setAttribute(
-            "aria-valuenow",
-            "0"
-        );
+        progress.style.width =
+            "0%";
 
         return;
-    
     }
 
 
     const percentage =
         Math.min(
-            Math.max(
-                (spent / budget) * 100,
-                0
-            ),
+            (spent / budget) * 100,
             100
         );
 
 
     progress.style.width =
         `${percentage}%`;
-
-
-    progress.setAttribute(
-        "aria-valuenow",
-        percentage.toFixed(0)
-    );
-
-
-    progress.setAttribute(
-        "aria-valuemax",
-        "100"
-    );
 }
 
 
@@ -302,26 +353,31 @@ function displayRecentTransactions(
 
 
     if (!container) {
-    
         return;
-    
     }
-
-
 
 
     const recentTransactions =
         [...transactions]
             .sort(
                 (a, b) =>
-                    getDateValue(b.date) -
-                    getDateValue(a.date)
+                    new Date(
+                        b.date
+                    ) -
+                    new Date(
+                        a.date
+                    )
             )
-            .slice(0, 5);
+            .slice(
+                0,
+                5
+            );
 
-        if(
-            recentTransactions.length === 0
-        ) {
+
+    if (
+        recentTransactions.length ===
+        0
+    ) {
 
         container.innerHTML = `
             <p class="empty-message">
@@ -330,10 +386,7 @@ function displayRecentTransactions(
         `;
 
         return;
-
     }
-
-
 
 
     container.innerHTML =
@@ -342,8 +395,7 @@ function displayRecentTransactions(
                 createTransactionHTML
             )
             .join("");
-
-        }
+}
 
 
 /* =========================================================
@@ -355,7 +407,8 @@ function createTransactionHTML(
 ) {
 
     const isIncome =
-        transaction.type === "income";
+        transaction.type ===
+        "income";
 
 
     const typeClass =
@@ -363,18 +416,19 @@ function createTransactionHTML(
             ? "income"
             : "expense";
 
-    const typeLabel =
-        isIncome
-            ? "Income"
-            : "Expense";
-
 
     const sign =
         isIncome
             ? "+"
             : "-";
 
-            
+
+    const typeLabel =
+        isIncome
+            ? "Income"
+            : "Expense";
+
+
     return `
         <article
             class="transaction-item ${typeClass}"
@@ -423,225 +477,6 @@ function createTransactionHTML(
 
 
 /* =========================================================
-   INCOME VS EXPENSES CHART
-   ========================================================= */
-
-function createIncomeExpenseChart(
-    transactions,
-    currentMonth
-) {
-
-    const canvas =
-        document.querySelector(
-            "#income-expense-chart"
-        );
-
-
-    if (!canvas) {
-        return;
-    }
-
-
-    /*
-     * Use current month data.
-     */
-
-    const monthlyTransactions =
-        transactions.filter(
-            transaction =>
-                transaction.date?.startsWith(
-                    currentMonth
-                )
-        );
-
-
-    const income =
-        calculateTotal(
-            monthlyTransactions,
-            "income"
-        );
-
-
-    const expenses =
-        calculateTotal(
-            monthlyTransactions,
-            "expense"
-        );
-
-
-    /*
-     * Make sure Chart.js is loaded.
-     */
-
-    if (
-        typeof Chart ===
-        "undefined"
-    ) {
-
-        console.error(
-            "Chart.js is not loaded."
-        );
-
-        return;
-    }
-
-
-    if (incomeExpenseChart) {
-
-        incomeExpenseChart.destroy();
-
-    }
-
-
-    incomeExpenseChart =
-        new Chart(
-            canvas,
-            {
-
-                type: "bar",
-
-                data: {
-
-                    labels: [
-                        "Income",
-                        "Expenses"
-                    ],
-
-                    datasets: [
-                        {
-                            label:
-                                "Current Month",
-
-                            data: [
-                                income,
-                                expenses
-                            ]
-                        }
-                    ]
-
-                },
-
-
-                options: {
-
-                    responsive: true,
-
-                    maintainAspectRatio:
-                        false,
-
-                    plugins: {
-
-                        legend: {
-                            display: false
-                        }
-
-                    },
-
-                    scales: {
-
-                        y: {
-
-                            beginAtZero: true,
-
-                            ticks: {
-
-                                callback:
-                                    value =>
-                                        formatCurrency(
-                                            value
-                                        )
-
-                            }
-
-                        }
-
-                    }
-
-                }
-
-            }
-        );
-}
-
-
-/* =========================================================
-   UPDATE ELEMENT
-   ========================================================= */
-
-function updateElement(
-    selector,
-    value
-) {
-
-    const element =
-        document.querySelector(
-            selector
-        );
-
-
-    if (!element) {
-        return;
-    }
-
-
-    element.textContent =
-        value;
-}
-
-
-/* =========================================================
-   CURRENT MONTH
-   ========================================================= */
-
-function getCurrentMonth() {
-
-    const now =
-        new Date();
-
-
-    const year =
-        now.getFullYear();
-
-
-    const month =
-        String(
-            now.getMonth() + 1
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    return `${year}-${month}`;
-}
-
-
-/* =========================================================
-   DATE VALUE
-   ========================================================= */
-
-function getDateValue(
-    dateString
-) {
-
-    if (!dateString) {
-        return 0;
-    }
-
-
-    const value =
-        new Date(
-            `${dateString}T00:00:00`
-        ).getTime();
-
-
-    return Number.isNaN(value)
-        ? 0
-        : value;
-}
-
-
-/* =========================================================
    FORMAT CURRENCY
    ========================================================= */
 
@@ -653,12 +488,11 @@ function formatCurrency(
         "en-US",
         {
             style: "currency",
-            currency: CURRENCY
+            currency: "USD"
         }
     ).format(
         Number(amount) || 0
     );
-
 }
 
 
@@ -667,40 +501,38 @@ function formatCurrency(
    ========================================================= */
 
 function formatDate(
-    dateString
+    date
 ) {
 
-    if (!dateString) {
+    if (!date) {
         return "No date";
     }
 
 
-    const date =
+    const parsedDate =
         new Date(
-            `${dateString}T00:00:00`
+            `${date}T00:00:00`
         );
 
 
     if (
         Number.isNaN(
-            date.getTime()
+            parsedDate.getTime()
         )
     ) {
 
-        return dateString;
+        return date;
     }
 
 
-    return date.toLocaleDateString(
+    return parsedDate.toLocaleDateString(
         "en-US",
         {
             year: "numeric",
             month: "short",
             day: "numeric"
         }
-
     );
-
 }
 
 
@@ -715,26 +547,24 @@ function escapeHTML(
     return String(
         value ?? ""
     )
-        .replace(
-            /&/g,
+        .replaceAll(
+            "&",
             "&amp;"
         )
-        .replace(
-            /</g,
+        .replaceAll(
+            "<",
             "&lt;"
         )
-        .replace(
-            />/g,
+        .replaceAll(
+            ">",
             "&gt;"
         )
-        .replace(
-            /"/g,
+        .replaceAll(
+            '"',
             "&quot;"
         )
-        .replace(
-            /'/g,
+        .replaceAll(
+            "'",
             "&#039;"
         );
-
-    }
-
+}

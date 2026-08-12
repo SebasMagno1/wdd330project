@@ -2,33 +2,26 @@
  * FinanceHub
  * Storage Module
  *
- * Central data layer for the entire application.
+ * Centralized localStorage management.
  *
- * All modules use the same data format:
- *
- * TRANSACTION
+ * Transaction:
  * {
- *     id,
- *     type,
- *     description,
- *     amount,
- *     category,
- *     date,
- *     notes,
- *     paymentMethod
+ *   id,
+ *   type,
+ *   description,
+ *   amount,
+ *   category,
+ *   date,
+ *   notes,
+ *   paymentMethod
  * }
  *
- * BUDGET
+ * Budget:
  * {
- *     id,
- *     month,
- *     category,
- *     limit
- * }
- *
- * PREFERENCES
- * {
- *     currency
+ *   id,
+ *   month,
+ *   category,
+ *   limit
  * }
  */
 
@@ -37,71 +30,50 @@
    STORAGE KEYS
    ========================================================= */
 
-const STORAGE_KEYS = {
-
-    TRANSACTIONS:
-        "financeHubTransactions",
-
-    BUDGETS:
-        "financeHubBudgets",
-
-    PREFERENCES:
-        "financeHubPreferences"
-
+const KEYS = {
+    TRANSACTIONS: "financeHubTransactions",
+    BUDGETS: "financeHubBudgets",
+    PREFERENCES: "financeHubPreferences"
 };
 
 
 /* =========================================================
-   ID GENERATOR
+   ID
    ========================================================= */
 
 export function generateId() {
 
     if (
         typeof crypto !== "undefined" &&
-        typeof crypto.randomUUID === "function"
+        crypto.randomUUID
     ) {
-
         return crypto.randomUUID();
-
     }
 
-
     return (
-        Date.now().toString(36) +
+        Date.now() +
         "-" +
         Math.random()
             .toString(36)
-            .substring(2, 10)
+            .substring(2, 9)
     );
 }
 
 
 /* =========================================================
-   GENERIC STORAGE HELPERS
+   GENERIC STORAGE
    ========================================================= */
 
-function readStorage(
-    key,
-    defaultValue
-) {
+function getData(key, fallback = []) {
 
     try {
 
         const data =
             localStorage.getItem(key);
 
-
-        if (!data) {
-            return defaultValue;
-        }
-
-
-        const parsed =
-            JSON.parse(data);
-
-
-        return parsed;
+        return data
+            ? JSON.parse(data)
+            : fallback;
 
     } catch (error) {
 
@@ -110,15 +82,12 @@ function readStorage(
             error
         );
 
-        return defaultValue;
+        return fallback;
     }
 }
 
 
-function writeStorage(
-    key,
-    data
-) {
+function saveData(key, data) {
 
     try {
 
@@ -126,7 +95,6 @@ function writeStorage(
             key,
             JSON.stringify(data)
         );
-
 
         return true;
 
@@ -143,7 +111,7 @@ function writeStorage(
 
 
 /* =========================================================
-   TRANSACTION NORMALIZATION
+   TRANSACTION NORMALIZER
    ========================================================= */
 
 function normalizeTransaction(
@@ -154,7 +122,6 @@ function normalizeTransaction(
         !transaction ||
         typeof transaction !== "object"
     ) {
-
         return null;
     }
 
@@ -171,7 +138,6 @@ function normalizeTransaction(
         type !== "income" &&
         type !== "expense"
     ) {
-
         return null;
     }
 
@@ -186,39 +152,8 @@ function normalizeTransaction(
         !Number.isFinite(amount) ||
         amount <= 0
     ) {
-
         return null;
     }
-
-
-    const description =
-        String(
-            transaction.description || ""
-        ).trim();
-
-
-    const category =
-        String(
-            transaction.category || ""
-        ).trim();
-
-
-    const date =
-        String(
-            transaction.date || ""
-        ).trim();
-
-
-    const notes =
-        String(
-            transaction.notes || ""
-        ).trim();
-
-
-    const paymentMethod =
-        String(
-            transaction.paymentMethod || ""
-        ).trim();
 
 
     return {
@@ -231,17 +166,32 @@ function normalizeTransaction(
 
         type,
 
-        description,
+        description:
+            String(
+                transaction.description || ""
+            ).trim(),
 
         amount,
 
-        category,
+        category:
+            String(
+                transaction.category || ""
+            ).trim(),
 
-        date,
+        date:
+            String(
+                transaction.date || ""
+            ).trim(),
 
-        notes,
+        notes:
+            String(
+                transaction.notes || ""
+            ).trim(),
 
-        paymentMethod
+        paymentMethod:
+            String(
+                transaction.paymentMethod || ""
+            ).trim()
 
     };
 }
@@ -251,15 +201,11 @@ function normalizeTransaction(
    TRANSACTIONS
    ========================================================= */
 
-
-/*
- * Get all transactions.
- */
 export function getTransactions() {
 
     const data =
-        readStorage(
-            STORAGE_KEYS.TRANSACTIONS,
+        getData(
+            KEYS.TRANSACTIONS,
             []
         );
 
@@ -275,18 +221,11 @@ export function getTransactions() {
 }
 
 
-/*
- * Save all transactions.
- */
 export function saveTransactions(
     transactions
 ) {
 
-    if (
-        !Array.isArray(
-            transactions
-        )
-    ) {
+    if (!Array.isArray(transactions)) {
 
         console.error(
             "Transactions must be an array."
@@ -296,22 +235,19 @@ export function saveTransactions(
     }
 
 
-    const normalizedTransactions =
+    const normalized =
         transactions
             .map(normalizeTransaction)
             .filter(Boolean);
 
 
-    return writeStorage(
-        STORAGE_KEYS.TRANSACTIONS,
-        normalizedTransactions
+    return saveData(
+        KEYS.TRANSACTIONS,
+        normalized
     );
 }
 
 
-/*
- * Add a transaction.
- */
 export function addTransaction(
     transaction
 ) {
@@ -325,7 +261,7 @@ export function addTransaction(
     if (!normalized) {
 
         console.error(
-            "Invalid transaction.",
+            "Invalid transaction:",
             transaction
         );
 
@@ -342,24 +278,14 @@ export function addTransaction(
     );
 
 
-    const saved =
-        saveTransactions(
-            transactions
-        );
-
-
-    if (!saved) {
-        return null;
-    }
-
-
-    return normalized;
+    return saveTransactions(
+        transactions
+    )
+        ? normalized
+        : null;
 }
 
 
-/*
- * Update a transaction.
- */
 export function updateTransaction(
     id,
     updatedData
@@ -367,10 +293,8 @@ export function updateTransaction(
 
     if (
         !id ||
-        !updatedData ||
-        typeof updatedData !== "object"
+        !updatedData
     ) {
-
         return null;
     }
 
@@ -388,40 +312,24 @@ export function updateTransaction(
 
 
     if (index === -1) {
-
-        console.warn(
-            "Transaction not found:",
-            id
-        );
-
         return null;
     }
 
 
-    const updatedTransaction = {
-
+    const updated = {
         ...transactions[index],
-
         ...updatedData,
-
-        id:
-            transactions[index].id
-
+        id: transactions[index].id
     };
 
 
     const normalized =
         normalizeTransaction(
-            updatedTransaction
+            updated
         );
 
 
     if (!normalized) {
-
-        console.error(
-            "Updated transaction is invalid."
-        );
-
         return null;
     }
 
@@ -430,32 +338,17 @@ export function updateTransaction(
         normalized;
 
 
-    const saved =
-        saveTransactions(
-            transactions
-        );
-
-
-    if (!saved) {
-        return null;
-    }
-
-
-    return normalized;
+    return saveTransactions(
+        transactions
+    )
+        ? normalized
+        : null;
 }
 
 
-/*
- * Delete a transaction.
- */
 export function deleteTransaction(
     id
 ) {
-
-    if (!id) {
-        return false;
-    }
-
 
     const transactions =
         getTransactions();
@@ -473,7 +366,6 @@ export function deleteTransaction(
         filtered.length ===
         transactions.length
     ) {
-
         return false;
     }
 
@@ -484,24 +376,12 @@ export function deleteTransaction(
 }
 
 
-/*
- * Get one transaction.
- */
 export function getTransactionById(
     id
 ) {
 
-    if (!id) {
-        return null;
-    }
-
-
-    const transactions =
-        getTransactions();
-
-
     return (
-        transactions.find(
+        getTransactions().find(
             transaction =>
                 String(transaction.id) ===
                 String(id)
@@ -510,184 +390,8 @@ export function getTransactionById(
 }
 
 
-/*
- * Delete all transactions.
- */
-export function clearTransactions() {
-
-    return saveTransactions([]);
-}
-
-
 /* =========================================================
-   TRANSACTION HELPERS
-   ========================================================= */
-
-
-/*
- * Get only income.
- */
-export function getIncomeTransactions() {
-
-    return getTransactions()
-        .filter(
-            transaction =>
-                transaction.type ===
-                "income"
-        );
-}
-
-
-/*
- * Get only expenses.
- */
-export function getExpenseTransactions() {
-
-    return getTransactions()
-        .filter(
-            transaction =>
-                transaction.type ===
-                "expense"
-        );
-}
-
-
-/*
- * Get total income.
- */
-export function getTotalIncome() {
-
-    return getIncomeTransactions()
-        .reduce(
-            (total, transaction) =>
-                total +
-                transaction.amount,
-            0
-        );
-}
-
-
-/*
- * Get total expenses.
- */
-export function getTotalExpenses() {
-
-    return getExpenseTransactions()
-        .reduce(
-            (total, transaction) =>
-                total +
-                transaction.amount,
-            0
-        );
-}
-
-
-/*
- * Get balance.
- */
-export function getBalance() {
-
-    return (
-        getTotalIncome() -
-        getTotalExpenses()
-    );
-}
-
-
-/* =========================================================
-   MONTHLY TRANSACTIONS
-   ========================================================= */
-
-
-/*
- * Get transactions for a month.
- *
- * Format:
- * YYYY-MM
- */
-export function getTransactionsByMonth(
-    month
-) {
-
-    if (!month) {
-        return [];
-    }
-
-
-    return getTransactions()
-        .filter(
-            transaction =>
-                transaction.date.startsWith(
-                    month
-                )
-        );
-}
-
-
-/*
- * Get monthly income.
- */
-export function getMonthlyIncome(
-    month
-) {
-
-    return getTransactionsByMonth(
-        month
-    )
-        .filter(
-            transaction =>
-                transaction.type ===
-                "income"
-        )
-        .reduce(
-            (total, transaction) =>
-                total +
-                transaction.amount,
-            0
-        );
-}
-
-
-/*
- * Get monthly expenses.
- */
-export function getMonthlyExpenses(
-    month
-) {
-
-    return getTransactionsByMonth(
-        month
-    )
-        .filter(
-            transaction =>
-                transaction.type ===
-                "expense"
-        )
-        .reduce(
-            (total, transaction) =>
-                total +
-                transaction.amount,
-            0
-        );
-}
-
-
-/*
- * Get monthly balance.
- */
-export function getMonthlyBalance(
-    month
-) {
-
-    return (
-        getMonthlyIncome(month) -
-        getMonthlyExpenses(month)
-    );
-}
-
-
-/* =========================================================
-   BUDGET NORMALIZATION
+   BUDGET NORMALIZER
    ========================================================= */
 
 function normalizeBudget(
@@ -698,7 +402,6 @@ function normalizeBudget(
         !budget ||
         typeof budget !== "object"
     ) {
-
         return null;
     }
 
@@ -713,7 +416,6 @@ function normalizeBudget(
         !Number.isFinite(limit) ||
         limit <= 0
     ) {
-
         return null;
     }
 
@@ -746,15 +448,11 @@ function normalizeBudget(
    BUDGETS
    ========================================================= */
 
-
-/*
- * Get all budgets.
- */
 export function getBudgets() {
 
     const data =
-        readStorage(
-            STORAGE_KEYS.BUDGETS,
+        getData(
+            KEYS.BUDGETS,
             []
         );
 
@@ -770,18 +468,11 @@ export function getBudgets() {
 }
 
 
-/*
- * Save budgets.
- */
 export function saveBudgets(
     budgets
 ) {
 
-    if (
-        !Array.isArray(
-            budgets
-        )
-    ) {
+    if (!Array.isArray(budgets)) {
 
         console.error(
             "Budgets must be an array."
@@ -791,22 +482,19 @@ export function saveBudgets(
     }
 
 
-    const normalizedBudgets =
+    const normalized =
         budgets
             .map(normalizeBudget)
             .filter(Boolean);
 
 
-    return writeStorage(
-        STORAGE_KEYS.BUDGETS,
-        normalizedBudgets
+    return saveData(
+        KEYS.BUDGETS,
+        normalized
     );
 }
 
 
-/*
- * Add budget.
- */
 export function addBudget(
     budget
 ) {
@@ -820,7 +508,7 @@ export function addBudget(
     if (!normalized) {
 
         console.error(
-            "Invalid budget.",
+            "Invalid budget:",
             budget
         );
 
@@ -837,24 +525,14 @@ export function addBudget(
     );
 
 
-    const saved =
-        saveBudgets(
-            budgets
-        );
-
-
-    if (!saved) {
-        return null;
-    }
-
-
-    return normalized;
+    return saveBudgets(
+        budgets
+    )
+        ? normalized
+        : null;
 }
 
 
-/*
- * Update budget.
- */
 export function updateBudget(
     id,
     updatedData
@@ -862,10 +540,8 @@ export function updateBudget(
 
     if (
         !id ||
-        !updatedData ||
-        typeof updatedData !== "object"
+        !updatedData
     ) {
-
         return null;
     }
 
@@ -883,12 +559,11 @@ export function updateBudget(
 
 
     if (index === -1) {
-
         return null;
     }
 
 
-    const updatedBudget = {
+    const updated = {
 
         ...budgets[index],
 
@@ -902,16 +577,11 @@ export function updateBudget(
 
     const normalized =
         normalizeBudget(
-            updatedBudget
+            updated
         );
 
 
     if (!normalized) {
-
-        console.error(
-            "Updated budget is invalid."
-        );
-
         return null;
     }
 
@@ -920,32 +590,17 @@ export function updateBudget(
         normalized;
 
 
-    const saved =
-        saveBudgets(
-            budgets
-        );
-
-
-    if (!saved) {
-        return null;
-    }
-
-
-    return normalized;
+    return saveBudgets(
+        budgets
+    )
+        ? normalized
+        : null;
 }
 
 
-/*
- * Delete budget.
- */
 export function deleteBudget(
     id
 ) {
-
-    if (!id) {
-        return false;
-    }
-
 
     const budgets =
         getBudgets();
@@ -963,7 +618,6 @@ export function deleteBudget(
         filtered.length ===
         budgets.length
     ) {
-
         return false;
     }
 
@@ -974,88 +628,26 @@ export function deleteBudget(
 }
 
 
-/*
- * Get budget by category.
- */
-export function getBudgetByCategory(
-    category,
-    month = ""
-) {
-
-    return (
-        getBudgets().find(
-            budget =>
-                budget.category ===
-                    category &&
-                (
-                    !month ||
-                    budget.month === month
-                )
-        ) || null
-    );
-}
-
-
-/*
- * Get budgets by month.
- */
-export function getBudgetsByMonth(
-    month
-) {
-
-    return getBudgets()
-        .filter(
-            budget =>
-                budget.month === month
-        );
-}
-
-
-/*
- * Delete all budgets.
- */
-export function clearBudgets() {
-
-    return saveBudgets([]);
-}
-
-
 /* =========================================================
    PREFERENCES
    ========================================================= */
 
-
-/*
- * Get preferences.
- */
 export function getPreferences() {
 
     const data =
-        readStorage(
-            STORAGE_KEYS.PREFERENCES,
+        getData(
+            KEYS.PREFERENCES,
             {
                 currency: "USD"
             }
         );
 
 
-    if (
-        !data ||
-        typeof data !== "object" ||
-        Array.isArray(data)
-    ) {
-
-        return {
-            currency: "USD"
-        };
-    }
-
-
     return {
 
         currency:
             String(
-                data.currency ||
+                data?.currency ||
                 "USD"
             ).toUpperCase()
 
@@ -1063,63 +655,46 @@ export function getPreferences() {
 }
 
 
-/*
- * Save preferences.
- */
 export function savePreferences(
     preferences
 ) {
 
     if (
         !preferences ||
-        typeof preferences !== "object" ||
-        Array.isArray(preferences)
+        typeof preferences !== "object"
     ) {
-
-        console.error(
-            "Invalid preferences."
-        );
-
         return false;
     }
 
 
-    const normalized = {
-
-        currency:
-            String(
-                preferences.currency ||
-                "USD"
-            ).toUpperCase()
-
-    };
-
-
-    return writeStorage(
-        STORAGE_KEYS.PREFERENCES,
-        normalized
+    return saveData(
+        KEYS.PREFERENCES,
+        {
+            currency:
+                String(
+                    preferences.currency ||
+                    "USD"
+                ).toUpperCase()
+        }
     );
 }
 
 
 /* =========================================================
-   CLEAR EVERYTHING
+   CLEAR ALL DATA
    ========================================================= */
 
 export function clearAllData() {
 
     localStorage.removeItem(
-        STORAGE_KEYS.TRANSACTIONS
+        KEYS.TRANSACTIONS
     );
-
 
     localStorage.removeItem(
-        STORAGE_KEYS.BUDGETS
+        KEYS.BUDGETS
     );
-
 
     localStorage.removeItem(
-        STORAGE_KEYS.PREFERENCES
+        KEYS.PREFERENCES
     );
-
 }
