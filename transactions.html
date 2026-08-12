@@ -1,54 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>FinanceHub | Transactions</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="css/style.css">
+    <meta
+        name="description"
+        content="FinanceHub transaction history. View, filter and manage financial transactions.">
+
+    <title>
+        FinanceHub | Transactions
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css">
+
 </head>
+
 
 <body>
 
+
     <!-- HEADER -->
+
     <header class="site-header">
 
         <div class="header-container">
 
-            <a href="index.html" class="logo">
+
+            <a
+                href="index.html"
+                class="logo">
+
                 Finance<span>Hub</span>
+
             </a>
 
-            <button class="menu-button" aria-label="Open navigation menu">
+
+            <button
+                class="menu-button"
+                aria-label="Open navigation menu">
+
                 ☰
+
             </button>
 
-            <nav class="main-navigation">
+
+            <nav
+                class="main-navigation"
+                aria-label="Main navigation">
 
                 <ul class="navigation">
 
-                    <li><a href="index.html">Home</a></li>
-
-                    <li><a href="dashboard.html">Dashboard</a></li>
 
                     <li>
-                        <a class="active" href="transactions.html">
-                            Transactions
+                        <a href="index.html">
+                            Home
                         </a>
                     </li>
 
-                    <li><a href="income.html">Income</a></li>
 
-                    <li><a href="expenses.html">Expenses</a></li>
+                    <li>
+                        <a href="dashboard.html">
+                            Dashboard
+                        </a>
+                    </li>
 
-                    <li><a href="budget.html">Budget</a></li>
 
-                    <li><a href="analytics.html">Analytics</a></li>
+                    <li>
+                        <a
+                            class="active"
+                            href="transactions.html">
 
-                    <li><a href="currency.html">Currency</a></li>
+                            Transactions
 
-                    <li><a href="news.html">Financial News</a></li>
+                        </a>
+                    </li>
+
+
+                    <li>
+                        <a href="income.html">
+                            Income
+                        </a>
+                    </li>
+
+
+                    <li>
+                        <a href="expenses.html">
+                            Expenses
+                        </a>
+                    </li>
+
+
+                    <li>
+                        <a href="budget.html">
+                            Budget
+                        </a>
+                    </li>
+
+
+                    <li>
+                        <a href="analytics.html">
+                            Analytics
+                        </a>
+                    </li>
+
+
+                    <li>
+                        <a href="currency.html">
+                            Currency
+                        </a>
+                    </li>
+
+
+                    <li>
+                        <a href="news.html">
+                            Financial News
+                        </a>
+                    </li>
+
 
                 </ul>
 
@@ -59,8 +135,13 @@
     </header>
 
 
+
     <!-- MAIN -->
+
     <main class="transactions-page">
+
+
+        <!-- PAGE HEADER -->
 
         <section class="page-header">
 
@@ -75,18 +156,28 @@
         </section>
 
 
+
         <!-- FILTERS -->
+
         <section class="filters-section">
 
-            <form id="transaction-filters">
+            <form
+                id="transaction-filters">
+
 
                 <div class="form-group">
 
-                    <label for="transaction-type">
+                    <label
+                        for="transaction-type">
+
                         Type
+
                     </label>
 
-                    <select id="transaction-type">
+
+                    <select
+                        id="transaction-type"
+                        name="type">
 
                         <option value="all">
                             All
@@ -105,13 +196,20 @@
                 </div>
 
 
+
                 <div class="form-group">
 
-                    <label for="transaction-category">
+                    <label
+                        for="transaction-category">
+
                         Category
+
                     </label>
 
-                    <select id="transaction-category">
+
+                    <select
+                        id="transaction-category"
+                        name="category">
 
                         <option value="all">
                             All Categories
@@ -141,8 +239,32 @@
                             Shopping
                         </option>
 
+                        <option value="Education">
+                            Education
+                        </option>
+
+                        <option value="Housing">
+                            Housing
+                        </option>
+
                         <option value="Salary">
                             Salary
+                        </option>
+
+                        <option value="Freelance">
+                            Freelance
+                        </option>
+
+                        <option value="Business">
+                            Business
+                        </option>
+
+                        <option value="Investment">
+                            Investment
+                        </option>
+
+                        <option value="Gift">
+                            Gift
                         </option>
 
                         <option value="Other">
@@ -154,30 +276,43 @@
                 </div>
 
 
+
                 <div class="form-group">
 
-                    <label for="start-date">
+                    <label
+                        for="start-date">
+
                         From
+
                     </label>
+
 
                     <input
                         type="date"
-                        id="start-date">
+                        id="start-date"
+                        name="startDate">
 
                 </div>
+
 
 
                 <div class="form-group">
 
-                    <label for="end-date">
+                    <label
+                        for="end-date">
+
                         To
+
                     </label>
+
 
                     <input
                         type="date"
-                        id="end-date">
+                        id="end-date"
+                        name="endDate">
 
                 </div>
+
 
 
                 <button
@@ -188,6 +323,8 @@
 
                 </button>
 
+
+
                 <button
                     type="button"
                     id="clear-filters"
@@ -197,42 +334,63 @@
 
                 </button>
 
+
             </form>
 
         </section>
 
 
+
         <!-- TRANSACTIONS TABLE -->
+
         <section class="transactions-table-section">
+
 
             <div class="section-header">
 
-                <h2>
-                    All Transactions
-                </h2>
+                <div>
 
-                <a
-                    href="income.html"
-                    class="btn primary-btn">
+                    <h2>
+                        All Transactions
+                    </h2>
 
-                    + Add Income
+                    <p>
+                        Your complete transaction history.
+                    </p>
 
-                </a>
+                </div>
 
-                <a
-                    href="expenses.html"
-                    class="btn secondary-btn">
 
-                    + Add Expense
+                <div class="section-actions">
 
-                </a>
+                    <a
+                        href="income.html"
+                        class="btn primary-btn">
+
+                        + Add Income
+
+                    </a>
+
+
+                    <a
+                        href="expenses.html"
+                        class="btn secondary-btn">
+
+                        + Add Expense
+
+                    </a>
+
+                </div>
 
             </div>
 
 
+
             <div class="table-container">
 
-                <table id="transactions-table">
+                <table
+                    id="transactions-table">
+
 
                     <thead>
 
@@ -266,19 +424,22 @@
 
                     </thead>
 
-                    <tbody id="transactions-list">
-
-                        <!-- JavaScript will insert transactions -->
+                    <tbody
+                        id="transactions-list">
 
                         <tr>
 
-                            <td colspan="6">
+                            <td
+                                colspan="6">
+
                                 No transactions available.
+
                             </td>
 
                         </tr>
 
                     </tbody>
+
 
                 </table>
 
@@ -286,16 +447,20 @@
 
         </section>
 
+
     </main>
 
 
+
     <!-- FOOTER -->
+
     <footer class="site-footer">
 
         <div class="footer-bottom">
 
             <p>
-                &copy; 2026 FinanceHub. All rights reserved.
+                &copy; 2026 FinanceHub.
+                All rights reserved.
             </p>
 
         </div>
@@ -303,10 +468,15 @@
     </footer>
 
 
+
+    <!-- JAVASCRIPT -->
+
     <script
         type="module"
-        src="js/transactions.js">
+        src="scripts/transactions.js">
     </script>
 
+
 </body>
+
 </html>

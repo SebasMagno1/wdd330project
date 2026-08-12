@@ -1,41 +1,13 @@
 /*
  * FinanceHub
- * Currency Converter Module
- */
-
-const API_KEY = "YOUR_API_KEY";
-
-const API_URL =
-    "https://v6.exchangerate-api.com/v6";
-
+ * Currency Converter
+*/
 
 /* =========================================================
-   DOM ELEMENTS
+   API CONFIGURATION
    ========================================================= */
 
-const currencyForm =
-    document.querySelector("#currency-form");
-
-const amountInput =
-    document.querySelector("#currency-amount");
-
-const fromCurrency =
-    document.querySelector("#from-currency");
-
-const toCurrency =
-    document.querySelector("#to-currency");
-
-const resultElement =
-    document.querySelector("#conversion-result");
-
-const rateElement =
-    document.querySelector("#exchange-rate");
-
-const swapButton =
-    document.querySelector("#swap-currencies");
-
-const currencyError =
-    document.querySelector("#currency-error");
+    const API_URL = "https://api.frankfurter.app/latest";
 
 
 /* =========================================================
@@ -46,344 +18,248 @@ document.addEventListener(
     "DOMContentLoaded",
     () => {
 
-        setDefaultCurrencies();
+        initializeCurrencyConverter();
 
     }
 );
 
 
 /* =========================================================
-   DEFAULT CURRENCIES
+   INITIALIZE CONVERTER
    ========================================================= */
 
-function setDefaultCurrencies() {
+function initializeCurrencyConverter() {
 
-    if (fromCurrency) {
+    const form =
+        document.querySelector(
+            "#currency-form"
+        );
 
-        fromCurrency.value =
-            "USD";
 
+    if (!form) {
+        console.warn(
+            "Currency form was not found."
+        );
+
+        return;
     }
 
 
-    if (toCurrency) {
-
-        toCurrency.value =
-            "EUR";
-
-    }
-
-}
-
-
-/* =========================================================
-   CONVERT CURRENCY
-   ========================================================= */
-
-if (currencyForm) {
-
-    currencyForm.addEventListener(
+    form.addEventListener(
         "submit",
-        async event => {
-
-            event.preventDefault();
-
-
-            clearError();
-
-
-            const amount =
-                Number(
-                    amountInput.value
-                );
-
-
-            const from =
-                fromCurrency.value;
-
-
-            const to =
-                toCurrency.value;
-
-
-            if (
-                !amount ||
-                amount <= 0
-            ) {
-
-                showError(
-                    "Please enter a valid amount."
-                );
-
-                return;
-            }
-
-
-            if (from === to) {
-
-                displayResult(
-                    amount,
-                    from,
-                    to,
-                    1
-                );
-
-                return;
-            }
-
-
-            try {
-
-                showLoading();
-
-
-                const rate =
-                    await getExchangeRate(
-                        from,
-                        to
-                    );
-
-
-                displayResult(
-                    amount,
-                    from,
-                    to,
-                    rate
-                );
-
-
-            } catch (error) {
-
-                console.error(
-                    "Currency API error:",
-                    error
-                );
-
-
-                showError(
-                    "Unable to retrieve exchange rates. Please try again."
-                );
-
-            }
-
-        }
+        handleConversion
     );
 
 }
 
 
 /* =========================================================
-   GET EXCHANGE RATE
+   HANDLE CONVERSION
    ========================================================= */
 
-async function getExchangeRate(
-    from,
-    to
+async function handleConversion(
+    event
 ) {
 
-    /*
-     * Replace YOUR_API_KEY with
-     * your ExchangeRate API key.
-     */
+    event.preventDefault();
 
-    const url =
-        `${API_URL}/${API_KEY}/pair/${from}/${to}`;
-
-
-    const response =
-        await fetch(url);
-
-
-    if (!response.ok) {
-
-        throw new Error(
-            "API request failed."
+    const amount =
+        Number(
+            document.querySelector(
+                "#currency-amount"
+            )?.value
         );
 
+
+    const fromCurrency =
+        document.querySelector(
+            "#from-currency"
+        )?.value;
+
+
+    const toCurrency =
+        document.querySelector(
+            "#to-currency"
+        )?.value;
+
+
+    const resultElement =
+        document.querySelector(
+            "#conversion-result"
+        );
+
+
+    /* -----------------------------------------------------
+       VALIDATION
+       ----------------------------------------------------- */
+
+    if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+    ) {
+
+        showResult(
+            "Please enter a valid amount."
+        );
+
+        return;
+
     }
-
-
-    const data =
-        await response.json();
 
 
     if (
-        data.result !==
-        "success"
+        !fromCurrency ||
+        !toCurrency
     ) {
 
-        throw new Error(
-            "Exchange rate request failed."
+        showResult(
+            "Please select both currencies."
+        );
+
+        return;
+
+    }
+
+
+    /* -----------------------------------------------------
+       SAME CURRENCY
+       ----------------------------------------------------- */
+
+    if (
+        fromCurrency ===
+        toCurrency
+    ) {
+
+        showResult(
+            `${formatNumber(amount)} ${fromCurrency} = ` +
+            `${formatNumber(amount)} ${toCurrency}`
+        );
+
+        return;
+
+    }
+
+
+    /* -----------------------------------------------------
+       LOADING
+       ----------------------------------------------------- */
+
+    showResult(
+        "Converting..."
+    );
+
+
+    try {
+
+        const url =
+            `${API_URL}?amount=${encodeURIComponent(
+                amount
+            )}&from=${encodeURIComponent(
+                fromCurrency
+            )}&to=${encodeURIComponent(
+                toCurrency
+            )}`;
+
+
+        const response =
+            await fetch(url);
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `API request failed: ${response.status}`
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            typeof data.rates?.[toCurrency] !==
+            "number"
+        ) {
+
+            throw new Error(
+                "Conversion rate was not returned."
+            );
+
+        }
+
+
+        const convertedAmount =
+            data.rates[toCurrency];
+
+
+        const rate =
+            convertedAmount / amount;
+
+
+        showResult(`
+            <strong>
+                ${formatNumber(amount)}
+                ${fromCurrency}
+            </strong>
+
+            =
+            
+            <strong>
+                ${formatNumber(convertedAmount)}
+                ${toCurrency}
+            </strong>
+
+            <small>
+                Exchange rate:
+                1 ${fromCurrency}
+                =
+                ${formatNumber(rate)}
+                ${toCurrency}
+            </small>
+        `);
+
+
+    } catch (error) {
+
+        console.error(
+            "Currency conversion error:",
+            error
+        );
+
+
+        showResult(
+            "Unable to retrieve the exchange rate. " +
+            "Please try again later."
         );
 
     }
 
-
-    return data.conversion_rate;
-
 }
 
 
 /* =========================================================
-   DISPLAY RESULT
+   SHOW RESULT
    ========================================================= */
 
-function displayResult(
-    amount,
-    from,
-    to,
-    rate
-) {
-
-    const convertedAmount =
-        amount * rate;
-
-
-    if (resultElement) {
-
-        resultElement.innerHTML = `
-
-            <span class="conversion-amount">
-
-                ${formatNumber(
-                    amount
-                )}
-                ${from}
-
-            </span>
-
-            <span class="conversion-arrow">
-                →
-            </span>
-
-            <span class="conversion-amount">
-
-                ${formatNumber(
-                    convertedAmount
-                )}
-                ${to}
-
-            </span>
-
-        `;
-
-    }
-
-
-    if (rateElement) {
-
-        rateElement.textContent =
-            `1 ${from} = ${rate.toFixed(6)} ${to}`;
-
-    }
-
-}
-
-
-/* =========================================================
-   SWAP CURRENCIES
-   ========================================================= */
-
-if (swapButton) {
-
-    swapButton.addEventListener(
-        "click",
-        () => {
-
-            const currentFrom =
-                fromCurrency.value;
-
-
-            fromCurrency.value =
-                toCurrency.value;
-
-
-            toCurrency.value =
-                currentFrom;
-
-
-            /*
-             * Automatically convert
-             * the current amount after
-             * swapping.
-             */
-
-            if (
-                amountInput.value
-            ) {
-
-                currencyForm.dispatchEvent(
-                    new Event(
-                        "submit"
-                    )
-                );
-
-            }
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   LOADING
-   ========================================================= */
-
-function showLoading() {
-
-    if (resultElement) {
-
-        resultElement.textContent =
-            "Converting...";
-
-    }
-
-
-    if (rateElement) {
-
-        rateElement.textContent =
-            "";
-
-    }
-
-}
-
-
-/* =========================================================
-   ERROR
-   ========================================================= */
-
-function showError(
+function showResult(
     message
 ) {
 
-    if (currencyError) {
-
-        currencyError.textContent =
-            message;
-
-        currencyError.classList.add(
-            "show"
+    const resultElement =
+        document.querySelector(
+            "#conversion-result"
         );
 
+
+    if (!resultElement) {
+        return;
     }
 
-}
 
-
-function clearError() {
-
-    if (currencyError) {
-
-        currencyError.textContent =
-            "";
-
-        currencyError.classList.remove(
-            "show"
-        );
-
-    }
+    resultElement.innerHTML =
+        message;
 
 }
 
@@ -393,15 +269,18 @@ function clearError() {
    ========================================================= */
 
 function formatNumber(
-    number
+    value
 ) {
 
     return new Intl.NumberFormat(
         "en-US",
         {
+            minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }
-    ).format(number);
+    ).format(
+        Number(value) || 0
+    );
 
 }
 

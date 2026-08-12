@@ -1,6 +1,13 @@
 /*
  * FinanceHub
  * Dashboard Module
+ *
+ * Displays:
+ * - Total income
+ * - Total expenses
+ * - Balance
+ * - Remaining budget
+ * - Recent transactions
  */
 
 import {
@@ -13,11 +20,14 @@ import {
    INITIALIZE DASHBOARD
    ========================================================= */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
 
-    updateDashboard();
+        updateDashboard();
 
-});
+    }
+);
 
 
 /* =========================================================
@@ -33,59 +43,90 @@ function updateDashboard() {
         getBudgets();
 
 
-    /* Calculate totals */
+    /* =====================================================
+       CALCULATE TOTAL INCOME
+       ===================================================== */
 
-    const totalIncome =
-        calculateTotal(
-            transactions,
-            "income"
-        );
+    const income =
+        transactions
+            .filter(
+                transaction =>
+                    transaction.type === "income"
+            )
+            .reduce(
+                (total, transaction) =>
+                    total +
+                    Number(transaction.amount || 0),
+                0
+            );
 
 
-    const totalExpenses =
-        calculateTotal(
-            transactions,
-            "expense"
-        );
+    /* =====================================================
+       CALCULATE TOTAL EXPENSES
+       ===================================================== */
 
+    const expenses =
+        transactions
+            .filter(
+                transaction =>
+                    transaction.type === "expense"
+            )
+            .reduce(
+                (total, transaction) =>
+                    total +
+                    Number(transaction.amount || 0),
+                0
+            );
+
+
+    /* =====================================================
+       CALCULATE BALANCE
+       ===================================================== */
 
     const balance =
-        totalIncome - totalExpenses;
+        income - expenses;
 
 
-    const monthlyBudget =
-        calculateMonthlyBudget(
-            budgets
+    /* =====================================================
+       CALCULATE TOTAL BUDGET
+       ===================================================== */
+
+    const totalBudget =
+        budgets.reduce(
+            (total, budget) =>
+                total +
+                Number(budget.limit || 0),
+            0
         );
 
 
+    /* =====================================================
+       CALCULATE BUDGET REMAINING
+       ===================================================== */
+
     const budgetRemaining =
-        monthlyBudget - totalExpenses;
+        totalBudget - expenses;
 
 
-    /* Update dashboard */
+    /* =====================================================
+       UPDATE SUMMARY CARDS
+       ===================================================== */
 
     updateElement(
         "#total-income",
-        formatCurrency(totalIncome)
+        formatCurrency(income)
     );
 
 
     updateElement(
         "#total-expenses",
-        formatCurrency(totalExpenses)
+        formatCurrency(expenses)
     );
 
 
     updateElement(
-        "#total-balance",
+        "#remaining-balance",
         formatCurrency(balance)
-    );
-
-
-    updateElement(
-        "#monthly-budget",
-        formatCurrency(monthlyBudget)
     );
 
 
@@ -95,243 +136,41 @@ function updateDashboard() {
     );
 
 
-    /* Recent transactions */
+    /* =====================================================
+       UPDATE MONTHLY BUDGET
+       ===================================================== */
+
+    updateElement(
+        "#monthly-budget",
+        formatCurrency(totalBudget)
+    );
+
+
+    updateElement(
+        "#budget-spent",
+        formatCurrency(expenses)
+    );
+
+
+    /* =====================================================
+       UPDATE BUDGET PROGRESS
+       ===================================================== */
+
+    updateBudgetProgress(
+        totalBudget,
+        expenses
+    );
+
+
+    /* =====================================================
+       DISPLAY RECENT TRANSACTIONS
+       ===================================================== */
 
     displayRecentTransactions(
         transactions
     );
 
-
-    /* Budget progress */
-
-    updateBudgetProgress(
-        totalExpenses,
-        monthlyBudget
-    );
-
-}
-
-
-/* =========================================================
-   CALCULATE TOTAL
-   ========================================================= */
-
-function calculateTotal(
-    transactions,
-    type
-) {
-
-    return transactions
-        .filter(
-            transaction =>
-                transaction.type === type
-        )
-        .reduce(
-            (total, transaction) =>
-                total + Number(
-                    transaction.amount
-                ),
-            0
-        );
-
-}
-
-
-/* =========================================================
-   CALCULATE MONTHLY BUDGET
-   ========================================================= */
-
-function calculateMonthlyBudget(
-    budgets
-) {
-
-    const currentMonth =
-        new Date()
-            .toISOString()
-            .slice(0, 7);
-
-
-    return budgets
-        .filter(
-            budget =>
-                budget.month === currentMonth
-        )
-        .reduce(
-            (total, budget) =>
-                total + Number(
-                    budget.limit
-                ),
-            0
-        );
-
-}
-
-
-/* =========================================================
-   RECENT TRANSACTIONS
-   ========================================================= */
-
-function displayRecentTransactions(
-    transactions
-) {
-
-    const container =
-        document.querySelector(
-            "#recent-transactions"
-        );
-
-
-    if (!container) {
-        return;
-    }
-
-
-    const recentTransactions =
-        [...transactions]
-            .sort(
-                (a, b) =>
-                    new Date(b.date) -
-                    new Date(a.date)
-            )
-            .slice(0, 5);
-
-
-    if (recentTransactions.length === 0) {
-
-        container.innerHTML = `
-            <p class="empty-message">
-                No transactions yet.
-            </p>
-        `;
-
-        return;
-    }
-
-
-    container.innerHTML =
-        recentTransactions
-            .map(transaction => {
-
-                const isIncome =
-                    transaction.type === "income";
-
-
-                const sign =
-                    isIncome
-                        ? "+"
-                        : "-";
-
-
-                const amountClass =
-                    isIncome
-                        ? "income-amount"
-                        : "expense-amount";
-
-
-                return `
-
-                    <div class="transaction-item">
-
-                        <div class="transaction-info">
-
-                            <h3>
-                                ${escapeHTML(
-                                    transaction.description
-                                )}
-                            </h3>
-
-                            <p>
-                                ${escapeHTML(
-                                    transaction.category
-                                )}
-                                ·
-                                ${formatDate(
-                                    transaction.date
-                                )}
-                            </p>
-
-                        </div>
-
-                        <strong
-                            class="transaction-amount ${amountClass}">
-
-                            ${sign}${formatCurrency(
-                                transaction.amount
-                            )}
-
-                        </strong>
-
-                    </div>
-
-                `;
-
-            })
-            .join("");
-
-}
-
-
-/* =========================================================
-   UPDATE BUDGET PROGRESS
-   ========================================================= */
-
-function updateBudgetProgress(
-    expenses,
-    budget
-) {
-
-    const progress =
-        document.querySelector(
-            "#budget-progress"
-        );
-
-
-    const progressText =
-        document.querySelector(
-            "#budget-progress-text"
-        );
-
-
-    if (!progress) {
-        return;
-    }
-
-
-    if (budget <= 0) {
-
-        progress.style.width = "0%";
-
-        if (progressText) {
-            progressText.textContent =
-                "No budget set";
-        }
-
-        return;
-    }
-
-
-    let percentage =
-        (expenses / budget) * 100;
-
-
-    percentage =
-        Math.min(
-            Math.max(percentage, 0),
-            100
-        );
-
-
-    progress.style.width =
-        `${percentage}%`;
-
-
-    if (progressText) {
-
-        progressText.textContent =
-            `${percentage.toFixed(0)}% used`;
-
-    }
-
+    
 }
 
 
@@ -345,12 +184,222 @@ function updateElement(
 ) {
 
     const element =
-        document.querySelector(selector);
+        document.querySelector(
+            selector
+        );
 
 
-    if (element) {
-        element.textContent = value;
+    if (!element) {
+
+        console.warn(
+            `Dashboard element not found: ${selector}`
+        );
+
+        return;
+
     }
+
+
+    element.textContent =
+        value;
+
+}
+
+
+/* =========================================================
+   UPDATE BUDGET PROGRESS
+   ========================================================= */
+
+function updateBudgetProgress(
+    budget,
+    spent
+) {
+
+    const progress =
+        document.querySelector(
+            "#budget-progress"
+        );
+
+
+    if (!progress) {
+        return;
+    }
+
+
+    if (
+        !Number.isFinite(budget) ||
+        budget <= 0
+    ) {
+
+        progress.style.width = "0%";
+
+        return;
+
+    }
+
+
+    const percentage =
+        Math.min(
+            (spent / budget) * 100,
+            100
+        );
+
+
+    progress.style.width =
+        `${percentage}%`;
+
+}
+
+
+/* =========================================================
+   DISPLAY RECENT TRANSACTIONS
+   ========================================================= */
+
+function displayRecentTransactions(
+    transactions
+) {
+
+    const container =
+        document.querySelector(
+            "#recent-transactions"
+        );
+
+
+    if (!container) {
+
+        console.warn(
+            "Recent transactions container not found."
+        );
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       SORT TRANSACTIONS
+       ===================================================== */
+
+    const recentTransactions =
+        [...transactions]
+            .sort(
+                (a, b) =>
+                    new Date(b.date) -
+                    new Date(a.date)
+            )
+            .slice(0, 5);
+
+
+    /* =====================================================
+       EMPTY STATE
+       ===================================================== */
+
+    if (
+        recentTransactions.length === 0
+    ) {
+
+        container.innerHTML = `
+            <p class="empty-message">
+                No recent transactions.
+            </p>
+        `;
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       RENDER TRANSACTIONS
+       ===================================================== */
+
+    container.innerHTML =
+        recentTransactions
+            .map(
+                transaction =>
+                    createTransactionHTML(
+                        transaction
+                    )
+            )
+            .join("");
+
+}
+
+
+/* =========================================================
+   CREATE TRANSACTION HTML
+   ========================================================= */
+
+function createTransactionHTML(
+    transaction
+) {
+
+    const isIncome =
+        transaction.type === "income";
+
+
+    const typeClass =
+        isIncome
+            ? "income"
+            : "expense";
+
+
+    const sign =
+        isIncome
+            ? "+"
+            : "-";
+
+
+    const typeLabel =
+        isIncome
+            ? "Income"
+            : "Expense";
+
+
+    return `
+        <article
+            class="transaction-item ${typeClass}"
+        >
+
+            <div class="transaction-info">
+
+                <h3>
+                    ${escapeHTML(
+                        transaction.description
+                    )}
+                </h3>
+
+                <p>
+                    ${escapeHTML(
+                        transaction.category
+                    )}
+                </p>
+
+                <small>
+                    ${formatDate(
+                        transaction.date
+                    )}
+                </small>
+
+            </div>
+
+
+            <div class="transaction-amount">
+
+                <span class="transaction-type">
+                    ${typeLabel}
+                </span>
+
+                <strong>
+                    ${sign}${formatCurrency(
+                        transaction.amount
+                    )}
+                </strong>
+
+            </div>
+
+        </article>
+    `;
 
 }
 
@@ -369,7 +418,9 @@ function formatCurrency(
             style: "currency",
             currency: "USD"
         }
-    ).format(amount);
+    ).format(
+        Number(amount) || 0
+    );
 
 }
 
@@ -383,19 +434,35 @@ function formatDate(
 ) {
 
     if (!date) {
-        return "";
+        return "No date";
     }
 
 
-    return new Intl.DateTimeFormat(
+    const parsedDate =
+        new Date(
+            `${date}T00:00:00`
+        );
+
+
+    if (
+        Number.isNaN(
+            parsedDate.getTime()
+        )
+    ) {
+
+        return date;
+
+    }
+
+
+    return parsedDate.toLocaleDateString(
         "en-US",
         {
             year: "numeric",
             month: "short",
             day: "numeric"
         }
-    ).format(
-        new Date(`${date}T00:00:00`)
+    
     );
 
 }
@@ -409,14 +476,28 @@ function escapeHTML(
     value
 ) {
 
-    const div =
-        document.createElement("div");
-
-
-    div.textContent =
-        value ?? "";
-
-
-    return div.innerHTML;
+    return String(
+        value ?? ""
+    )
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
 
 }

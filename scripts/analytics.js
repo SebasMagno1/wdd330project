@@ -1,6 +1,12 @@
 /*
  * FinanceHub
  * Analytics Module
+ *
+ * Displays:
+ * - Spending by Category
+ * - Income vs Expenses
+ * - Budget Usage
+ * - Monthly Spending Trend
  */
 
 import {
@@ -16,63 +22,174 @@ import {
 let categoryChart = null;
 let incomeExpenseChart = null;
 let budgetChart = null;
+let monthlyTrendChart = null;
 
 
 /* =========================================================
    INITIALIZE
    ========================================================= */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
 
-    createAnalytics();
+        initializeAnalytics();
 
-});
+    }
+);
 
 
 /* =========================================================
-   MAIN ANALYTICS FUNCTION
+   INITIALIZE ANALYTICS
    ========================================================= */
 
-function createAnalytics() {
+function initializeAnalytics() {
 
-    const transactions =
-        getTransactions();
+    setupAnalyticsFilter();
 
-    const budgets =
-        getBudgets();
+    setDefaultMonth();
 
+    updateAnalytics();
 
-    updateAnalyticsSummary(
-        transactions,
-        budgets
-    );
+}
 
 
-    createCategoryChart(
-        transactions
-    );
+/* =========================================================
+   FILTER FORM
+   ========================================================= */
+
+function setupAnalyticsFilter() {
+
+    const filterForm =
+        document.querySelector(
+            "#analytics-filter-form"
+        );
 
 
-    createIncomeExpenseChart(
-        transactions
-    );
+    if (!filterForm) {
+        return;
+    }
 
 
-    createBudgetChart(
-        transactions,
-        budgets
+    filterForm.addEventListener(
+        "submit",
+        event => {
+
+            event.preventDefault();
+
+            updateAnalytics();
+
+        }
     );
 
 }
 
 
 /* =========================================================
-   SUMMARY
+   DEFAULT MONTH
    ========================================================= */
 
-function updateAnalyticsSummary(
-    transactions,
-    budgets
+function setDefaultMonth() {
+
+    const monthInput =
+        document.querySelector(
+            "#analytics-month"
+        );
+
+
+    if (
+        !monthInput ||
+        monthInput.value
+    ) {
+        return;
+    }
+
+
+    const today =
+        new Date();
+
+
+    const year =
+        today.getFullYear();
+
+
+    const month =
+        String(
+            today.getMonth() + 1
+        ).padStart(2, "0");
+
+
+    monthInput.value =
+        `${year}-${month}`;
+
+}
+
+
+/* =========================================================
+   MAIN ANALYTICS FUNCTION
+   ========================================================= */
+
+function updateAnalytics() {
+
+    const transactions =
+        getTransactions();
+
+
+    const budgets =
+        getBudgets();
+
+
+    const selectedMonth =
+        document.querySelector(
+            "#analytics-month"
+        )?.value || "";
+
+
+    const filteredTransactions =
+        selectedMonth
+            ? transactions.filter(
+                transaction =>
+                    transaction.date?.startsWith(
+                        selectedMonth
+                    )
+            )
+            : transactions;
+
+
+    updateSummary(
+        filteredTransactions
+    );
+
+
+    createCategoryChart(
+        filteredTransactions
+    );
+
+
+    createIncomeExpenseChart(
+        filteredTransactions
+    );
+
+
+    createBudgetChart(
+        budgets,
+        selectedMonth
+    );
+
+
+    createMonthlyTrendChart(
+        transactions
+    );
+
+}
+
+
+/* =========================================================
+   UPDATE SUMMARY
+   ========================================================= */
+
+function updateSummary(
+    transactions
 ) {
 
     const income =
@@ -84,7 +201,9 @@ function updateAnalyticsSummary(
             .reduce(
                 (total, transaction) =>
                     total +
-                    Number(transaction.amount),
+                    Number(
+                        transaction.amount || 0
+                    ),
                 0
             );
 
@@ -98,23 +217,14 @@ function updateAnalyticsSummary(
             .reduce(
                 (total, transaction) =>
                     total +
-                    Number(transaction.amount),
+                    Number(
+                        transaction.amount || 0
+                    ),
                 0
             );
 
 
-    const balance =
-        income - expenses;
-
-
-    const budget =
-        budgets.reduce(
-            (total, item) =>
-                total +
-                Number(item.limit),
-            0
-        );
-
+    const balance = income - expenses;
 
     updateElement(
         "#analytics-income",
@@ -132,14 +242,9 @@ function updateAnalyticsSummary(
         "#analytics-balance",
         formatCurrency(balance)
     );
-
-
-    updateElement(
-        "#analytics-budget",
-        formatCurrency(budget)
-    );
-
 }
+
+
 
 
 /* =========================================================
@@ -152,7 +257,7 @@ function createCategoryChart(
 
     const canvas =
         document.querySelector(
-            "#category-chart"
+            "#spending-category-chart"
         );
 
 
@@ -161,44 +266,45 @@ function createCategoryChart(
     }
 
 
-    const expenses =
-        transactions.filter(
+    const categoryTotals = {};
+
+
+    transactions
+        .filter(
             transaction =>
                 transaction.type === "expense"
+        )
+        .forEach(
+            transaction => {
+
+                const category =
+                    transaction.category ||
+                    "Other";
+
+
+                categoryTotals[category] =
+                    (
+                        categoryTotals[category] ||
+                        0
+                    ) +
+                    Number(
+                        transaction.amount || 0
+                    );
+
+            }
         );
 
 
-    const categories = {};
-
-
-    expenses.forEach(
-        transaction => {
-
-            const category =
-                transaction.category ||
-                "Other";
-
-
-            if (!categories[category]) {
-
-                categories[category] = 0;
-
-            }
-
-
-            categories[category] +=
-                Number(transaction.amount);
-
-        }
-    );
-
-
     const labels =
-        Object.keys(categories);
+        Object.keys(
+            categoryTotals
+        );
 
 
     const values =
-        Object.values(categories);
+        Object.values(
+            categoryTotals
+        );
 
 
     if (categoryChart) {
@@ -223,8 +329,7 @@ function createCategoryChart(
                             label:
                                 "Spending",
 
-                            data:
-                                values
+                            data: values
                         }
                     ]
 
@@ -239,31 +344,7 @@ function createCategoryChart(
                     plugins: {
 
                         legend: {
-
-                            position:
-                                "bottom"
-
-                        },
-
-                        tooltip: {
-
-                            callbacks: {
-
-                                label:
-                                    context => {
-
-                                        const value =
-                                            context.raw;
-
-                                        return `
-                                            ${context.label}:
-                                            ${formatCurrency(value)}
-                                        `;
-
-                                    }
-
-                            }
-
+                            position: "bottom"
                         }
 
                     }
@@ -295,83 +376,36 @@ function createIncomeExpenseChart(
     }
 
 
-    const monthlyData =
-        {};
-
-
-    transactions.forEach(
-        transaction => {
-
-            const month =
-                transaction.date
-                    ?.substring(0, 7);
-
-
-            if (!month) {
-                return;
-            }
-
-
-            if (!monthlyData[month]) {
-
-                monthlyData[month] = {
-
-                    income: 0,
-
-                    expense: 0
-
-                };
-
-            }
-
-
-            if (
-                transaction.type ===
-                "income"
-            ) {
-
-                monthlyData[month].income +=
+    const income =
+        transactions
+            .filter(
+                transaction =>
+                    transaction.type === "income"
+            )
+            .reduce(
+                (total, transaction) =>
+                    total +
                     Number(
-                        transaction.amount
-                    );
+                        transaction.amount || 0
+                    ),
+                0
+            );
 
-            }
 
-
-            if (
-                transaction.type ===
-                "expense"
-            ) {
-
-                monthlyData[month].expense +=
+    const expenses =
+        transactions
+            .filter(
+                transaction =>
+                    transaction.type === "expense"
+            )
+            .reduce(
+                (total, transaction) =>
+                    total +
                     Number(
-                        transaction.amount
-                    );
-
-            }
-
-        }
-    );
-
-
-    const months =
-        Object.keys(
-            monthlyData
-        ).sort();
-
-
-    const incomeValues =
-        months.map(
-            month =>
-                monthlyData[month].income
-        );
-
-
-    const expenseValues =
-        months.map(
-            month =>
-                monthlyData[month].expense
-        );
+                        transaction.amount || 0
+                    ),
+                0
+            );
 
 
     if (incomeExpenseChart) {
@@ -383,36 +417,28 @@ function createIncomeExpenseChart(
 
     incomeExpenseChart =
         new Chart(
-            canvas,
-            {
-
+            canvas,{
                 type: "bar",
 
                 data: {
 
-                    labels:
-                        months.map(
-                            formatMonth
-                        ),
+                    labels: [
+                        "Income",
+                        "Expenses"
+                    ],
 
-                    datasets: [
+                    
+                    
+                datasets: [
+                    {
+                        label:
+                            "Amount",
 
-                        {
-                            label:
-                                "Income",
-
-                            data:
-                                incomeValues
-                        },
-
-                        {
-                            label:
-                                "Expenses",
-
-                            data:
-                                expenseValues
+                            data: [
+                                income,
+                                expenses
+                            ]
                         }
-
                     ]
 
                 },
@@ -426,35 +452,7 @@ function createIncomeExpenseChart(
                     scales: {
 
                         y: {
-
-                            beginAtZero: true,
-
-                            ticks: {
-
-                                callback:
-                                    value =>
-                                        formatCurrency(
-                                            value
-                                        )
-
-                            }
-
-                        }
-
-                    },
-
-                    plugins: {
-
-                        tooltip: {
-
-                            callbacks: {
-
-                                label:
-                                    context =>
-                                        `${context.dataset.label}: ${formatCurrency(context.raw)}`
-
-                            }
-
+                            beginAtZero: true
                         }
 
                     }
@@ -472,13 +470,13 @@ function createIncomeExpenseChart(
    ========================================================= */
 
 function createBudgetChart(
-    transactions,
-    budgets
+    budgets,
+    selectedMonth
 ) {
 
     const canvas =
         document.querySelector(
-            "#budget-chart"
+            "#budget-usage-chart"
         );
 
 
@@ -487,82 +485,44 @@ function createBudgetChart(
     }
 
 
-    const budgetData =
-        budgets.map(
-            budget => {
-
-                const spent =
-                    transactions
-                        .filter(
-                            transaction => {
-
-                                return (
-
-                                    transaction.type ===
-                                    "expense"
-
-                                    &&
-
-                                    transaction.category ===
-                                    budget.category
-
-                                    &&
-
-                                    transaction.date
-                                        ?.startsWith(
-                                            budget.month
-                                        )
-
-                                );
-
-                            }
-                        )
-                        .reduce(
-                            (total, transaction) =>
-                                total +
-                                Number(
-                                    transaction.amount
-                                ),
-                            0
-                        );
+    let filteredBudgets =
+        budgets;
 
 
-                return {
+    if (selectedMonth) {
 
-                    category:
-                        budget.category,
+        filteredBudgets =
+            budgets.filter(
+                budget =>
+                    budget.month ===
+                    selectedMonth
+            );
 
-                    budget:
-                        Number(
-                            budget.limit
-                        ),
-
-                    spent
-
-                };
-
-            }
-        );
+    }
 
 
     const labels =
-        budgetData.map(
-            item =>
-                item.category
+        filteredBudgets.map(
+            budget =>
+                budget.category
         );
 
 
     const budgetValues =
-        budgetData.map(
-            item =>
-                item.budget
+        filteredBudgets.map(
+            budget =>
+                Number(
+                    budget.limit || 0
+                )
         );
 
 
     const spentValues =
-        budgetData.map(
-            item =>
-                item.spent
+        filteredBudgets.map(
+            budget =>
+                calculateBudgetSpent(
+                    budget
+                )
         );
 
 
@@ -575,9 +535,7 @@ function createBudgetChart(
 
     budgetChart =
         new Chart(
-            canvas,
-            {
-
+            canvas,{
                 type: "bar",
 
                 data: {
@@ -615,19 +573,187 @@ function createBudgetChart(
                     scales: {
 
                         y: {
+                            beginAtZero: true
+                        }
 
-                            beginAtZero: true,
+                    }
 
-                            ticks: {
+                }
 
-                                callback:
-                                    value =>
-                                        formatCurrency(
-                                            value
-                                        )
+            }
+        );
 
-                            }
+}
 
+
+/* =========================================================
+   CALCULATE BUDGET SPENT
+   ========================================================= */
+
+function calculateBudgetSpent(
+    budget
+) {
+
+    const transactions =
+        getTransactions();
+
+
+    return transactions
+        .filter(
+            transaction => {
+
+                const isExpense =
+                    transaction.type ===
+                    "expense";
+
+
+                const sameCategory =
+                    transaction.category ===
+                    budget.category;
+
+
+                const transactionMonth =
+                    transaction.date
+                        ?.substring(0, 7);
+
+
+                const sameMonth =
+                    transactionMonth ===
+                    budget.month;
+
+
+                return (
+                    isExpense &&
+                    sameCategory &&
+                    sameMonth
+                );
+
+            }
+        )
+        .reduce(
+            (total, transaction) =>
+                total +
+                Number(
+                    transaction.amount || 0
+                ),
+            0
+        );
+
+}
+
+
+/* =========================================================
+   MONTHLY SPENDING TREND
+   ========================================================= */
+
+function createMonthlyTrendChart(
+    transactions
+) {
+
+    const canvas =
+        document.querySelector(
+            "#monthly-trend-chart"
+        );
+
+
+    if (!canvas) {
+        return;
+    }
+
+
+    const monthlyTotals = {};
+
+
+    transactions
+        .filter(
+            transaction =>
+                transaction.type === "expense"
+        )
+        .forEach(
+            transaction => {
+
+                const month =
+                    transaction.date
+                        ?.substring(0, 7);
+
+
+                if (!month) {
+                    return;
+                }
+
+
+                monthlyTotals[month] =
+                    (
+                        monthlyTotals[month] ||
+                        0
+                    ) +
+                    Number(
+                        transaction.amount || 0
+                    );
+
+            }
+        );
+
+
+    const labels =
+        Object.keys(
+            monthlyTotals
+        ).sort();
+
+
+    const values =
+        labels.map(
+            month =>
+                monthlyTotals[month]
+        );
+
+
+    if (monthlyTrendChart) {
+
+        monthlyTrendChart.destroy();
+
+    }
+
+
+    monthlyTrendChart =
+        new Chart(
+            canvas,
+            {
+                type: "line",
+
+                data: {
+
+                    labels:
+                        labels.map(
+                            formatMonth
+                        ),
+
+                    datasets: [
+                        {
+                            label:
+                                "Monthly Spending",
+
+                            data:
+                                values,
+
+                            tension: 0.3,
+
+                            fill: false
+                        }
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    scales: {
+
+                        y: {
+                            beginAtZero: true
                         }
 
                     }
@@ -655,14 +781,17 @@ function updateElement(
         );
 
 
-    if (element) {
-
-        element.textContent =
-            value;
-
+    if (!element) {
+        return;
     }
 
+
+    element.textContent =
+        value;
+
 }
+
+
 
 
 /* =========================================================
@@ -676,15 +805,12 @@ function formatCurrency(
     return new Intl.NumberFormat(
         "en-US",
         {
-
-            style:
-                "currency",
-
-            currency:
-                "USD"
-
+            style: "currency",
+            currency: "USD"
         }
-    ).format(amount);
+    ).format(
+        Number(amount) || 0
+    );
 
 }
 
@@ -693,14 +819,7 @@ function formatCurrency(
    FORMAT MONTH
    ========================================================= */
 
-function formatMonth(
-    month
-) {
-
-    if (!month) {
-        return "";
-    }
-
+function formatMonth(month) {
 
     const date =
         new Date(
@@ -708,18 +827,24 @@ function formatMonth(
         );
 
 
-    return new Intl.DateTimeFormat(
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return month;
+
+    }
+
+
+    return date.toLocaleDateString(
         "en-US",
         {
-
-            month:
-                "short",
-
-            year:
-                "numeric"
-
+            year: "numeric",
+            month: "short"
         }
-    ).format(date);
+    );
 
 }
 

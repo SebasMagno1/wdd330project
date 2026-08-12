@@ -1,6 +1,13 @@
 /*
  * FinanceHub
  * Budget Module
+ *
+ * Handles:
+ * - Creating budgets
+ * - Displaying budgets
+ * - Calculating spending
+ * - Calculating remaining budget
+ * - Deleting budgets
  */
 
 import {
@@ -13,62 +20,46 @@ import {
 
 
 /* =========================================================
-   DOM ELEMENTS
-   ========================================================= */
-
-const budgetForm =
-    document.querySelector("#budget-form");
-
-const budgetList =
-    document.querySelector("#budget-list");
-
-const totalBudgetElement =
-    document.querySelector("#total-budget");
-
-const totalSpentElement =
-    document.querySelector("#total-budget-spent");
-
-const remainingElement =
-    document.querySelector("#budget-remaining");
-
-const budgetMonthInput =
-    document.querySelector("#budget-month");
-
-
-/* =========================================================
    INITIALIZE
    ========================================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    setCurrentMonth();
-
-    displayBudgets();
-
-    updateBudgetSummary();
+    initializeBudget();
 
 });
 
 
 /* =========================================================
-   SET CURRENT MONTH
+   INITIALIZE BUDGET
    ========================================================= */
 
-function setCurrentMonth() {
+function initializeBudget() {
 
-    if (!budgetMonthInput) {
+    setupBudgetForm();
+
+    displayBudgets();
+
+}
+
+
+/* =========================================================
+   BUDGET FORM
+   ========================================================= */
+
+function setupBudgetForm() {
+
+    const budgetForm =
+        document.querySelector("#budget-form");
+
+    if (!budgetForm) {
         return;
     }
 
-
-    const currentMonth =
-        new Date()
-            .toISOString()
-            .slice(0, 7);
-
-
-    budgetMonthInput.value =
-        currentMonth;
+    budgetForm.addEventListener(
+        "submit",
+        handleBudgetSubmit
+    );
 
 }
 
@@ -77,107 +68,128 @@ function setCurrentMonth() {
    ADD BUDGET
    ========================================================= */
 
-if (budgetForm) {
+function handleBudgetSubmit(event) {
 
-    budgetForm.addEventListener(
-        "submit",
-        event => {
-
-            event.preventDefault();
+    event.preventDefault();
 
 
-            const formData =
-                new FormData(budgetForm);
+    const month =
+        document.querySelector(
+            "#budget-month"
+        )?.value;
 
 
-            const month =
-                formData.get("month");
+    const category =
+        document.querySelector(
+            "#budget-category"
+        )?.value;
 
 
-            const category =
-                formData.get("category");
+    const limit =
+        Number(
+            document.querySelector(
+                "#budget-limit"
+            )?.value
+        );
 
 
-            const limit =
-                Number(
-                    formData.get("limit")
-                );
+    /* -----------------------------------------------------
+       VALIDATION
+       ----------------------------------------------------- */
+
+    if (
+        !month ||
+        !category ||
+        !Number.isFinite(limit) ||
+        limit <= 0
+    ) {
+
+        alert(
+            "Please complete all budget fields with valid information."
+        );
+
+        return;
+
+    }
 
 
-            if (
-                !month ||
-                !category ||
-                !limit ||
-                limit <= 0
-            ) {
+    /* -----------------------------------------------------
+       CHECK FOR DUPLICATE BUDGET
+       ----------------------------------------------------- */
 
-                alert(
-                    "Please enter a valid budget."
-                );
-
-                return;
-            }
+    const budgets =
+        getBudgets();
 
 
-            /*
-             * Check whether the same
-             * category already exists
-             * for the selected month.
-             */
-
-            const budgets =
-                getBudgets();
+    const existingBudget =
+        budgets.find(
+            budget =>
+                budget.month === month &&
+                budget.category === category
+        );
 
 
-            const existingBudget =
-                budgets.find(
-                    budget =>
-                        budget.month === month &&
-                        budget.category === category
-                );
+    if (existingBudget) {
+
+        alert(
+            "A budget already exists for this category and month."
+        );
+
+        return;
+
+    }
 
 
-            if (existingBudget) {
+    /* -----------------------------------------------------
+       CREATE BUDGET
+       ----------------------------------------------------- */
 
-                updateBudget(
-                    existingBudget.id,
-                    {
-                        month,
-                        category,
-                        limit
-                    }
-                );
+    const budget = {
 
+        month,
 
-                alert(
-                    "Budget updated successfully!"
-                );
+        category,
 
-            } else {
+        limit
 
-                addBudget({
-                    month,
-                    category,
-                    limit
-                });
+    };
 
 
-                alert(
-                    "Budget created successfully!"
-                );
+    /* -----------------------------------------------------
+       SAVE
+       ----------------------------------------------------- */
 
-            }
+    const savedBudget =
+        addBudget(budget);
 
 
-            budgetForm.reset();
+    if (!savedBudget) {
 
-            setCurrentMonth();
+        alert(
+            "Unable to save the budget."
+        );
 
-            displayBudgets();
+        return;
 
-            updateBudgetSummary();
+    }
 
-        }
+
+    /* -----------------------------------------------------
+       RESET
+       ----------------------------------------------------- */
+
+    event.target.reset();
+
+
+    /* -----------------------------------------------------
+       UPDATE DISPLAY
+       ----------------------------------------------------- */
+
+    displayBudgets();
+
+
+    alert(
+        "Budget saved successfully."
     );
 
 }
@@ -187,7 +199,13 @@ if (budgetForm) {
    DISPLAY BUDGETS
    ========================================================= */
 
-export function displayBudgets() {
+function displayBudgets() {
+
+    const budgetList =
+        document.querySelector(
+            "#budget-list"
+        );
+
 
     if (!budgetList) {
         return;
@@ -198,6 +216,22 @@ export function displayBudgets() {
         getBudgets();
 
 
+    /* -----------------------------------------------------
+       SORT BUDGETS
+       ----------------------------------------------------- */
+
+    budgets.sort(
+        (a, b) =>
+            b.month.localeCompare(
+                a.month
+            )
+    );
+
+
+    /* -----------------------------------------------------
+       EMPTY STATE
+       ----------------------------------------------------- */
+
     if (budgets.length === 0) {
 
         budgetList.innerHTML = `
@@ -206,222 +240,171 @@ export function displayBudgets() {
             </p>
         `;
 
+        updateBudgetSummary([]);
+
         return;
+
     }
 
 
-    /*
-     * Sort budgets by month
-     * and category.
-     */
-
-    const sortedBudgets =
-        [...budgets].sort(
-            (a, b) => {
-
-                if (
-                    a.month === b.month
-                ) {
-
-                    return a.category.localeCompare(
-                        b.category
-                    );
-
-                }
-
-                return b.month.localeCompare(
-                    a.month
-                );
-
-            }
-        );
-
+    /* -----------------------------------------------------
+       RENDER
+       ----------------------------------------------------- */
 
     budgetList.innerHTML =
-        sortedBudgets
-            .map(budget => {
-
-                const spent =
-                    calculateCategorySpent(
-                        budget.month,
-                        budget.category
-                    );
-
-
-                const remaining =
-                    budget.limit - spent;
-
-
-                let percentage =
-                    budget.limit > 0
-                        ? (spent / budget.limit) * 100
-                        : 0;
-
-
-                /*
-                 * Allow progress to reach
-                 * 100%, but not exceed it.
-                 */
-
-                const progress =
-                    Math.min(
-                        Math.max(
-                            percentage,
-                            0
-                        ),
-                        100
-                    );
-
-
-                let progressClass =
-                    "";
-
-
-                if (percentage >= 100) {
-
-                    progressClass =
-                        "budget-danger";
-
-                } else if (percentage >= 80) {
-
-                    progressClass =
-                        "budget-warning";
-
-                }
-
-
-                const remainingClass =
-                    remaining < 0
-                        ? "expense-amount"
-                        : "income-amount";
-
-
-                return `
-
-                    <article
-                        class="budget-item">
-
-                        <div
-                            class="budget-item-header">
-
-                            <div>
-
-                                <h3>
-                                    ${escapeHTML(
-                                        budget.category
-                                    )}
-                                </h3>
-
-                                <p>
-                                    ${formatMonth(
-                                        budget.month
-                                    )}
-                                </p>
-
-                            </div>
-
-                            <strong>
-                                ${formatCurrency(
-                                    budget.limit
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div
-                            class="budget-progress">
-
-                            <div
-                                class="budget-info">
-
-                                <span>
-                                    Spent:
-                                    ${formatCurrency(
-                                        spent
-                                    )}
-                                </span>
-
-                                <span>
-                                    ${percentage.toFixed(0)}%
-                                </span>
-
-                            </div>
-
-
-                            <div
-                                class="progress-bar">
-
-                                <div
-                                    class="progress-fill ${progressClass}"
-                                    style="width: ${progress}%">
-                                </div>
-
-                            </div>
-
-
-                            <div
-                                class="budget-info">
-
-                                <span>
-                                    Remaining
-                                </span>
-
-                                <strong
-                                    class="${remainingClass}">
-
-                                    ${formatCurrency(
-                                        remaining
-                                    )}
-
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-
-                        <div
-                            class="form-buttons">
-
-                            <button
-                                type="button"
-                                class="btn secondary-btn edit-budget"
-                                data-id="${budget.id}">
-
-                                Edit
-
-                            </button>
-
-
-                            <button
-                                type="button"
-                                class="btn secondary-btn delete-budget"
-                                data-id="${budget.id}">
-
-                                Delete
-
-                            </button>
-
-                        </div>
-
-                    </article>
-
-                `;
-
-            })
+        budgets
+            .map(
+                budget =>
+                    createBudgetHTML(
+                        budget
+                    )
+            )
             .join("");
+
+
+    setupBudgetDeleteButtons();
+
+    updateBudgetSummary(budgets);
 
 }
 
 
 /* =========================================================
-   CALCULATE CATEGORY SPENDING
+   CREATE BUDGET HTML
    ========================================================= */
 
-function calculateCategorySpent(
-    month,
-    category
+function createBudgetHTML(
+    budget
+) {
+
+    const spent =
+        calculateBudgetSpent(
+            budget
+        );
+
+
+    const remaining =
+        Number(budget.limit) -
+        spent;
+
+
+    const percentage =
+        budget.limit > 0
+            ? Math.min(
+                (spent /
+                    budget.limit) *
+                    100,
+                100
+            )
+            : 0;
+
+
+    const statusClass =
+        percentage >= 100
+            ? "over-budget"
+            : percentage >= 80
+                ? "warning"
+                : "on-track";
+
+
+    return `
+        <article
+            class="budget-item ${statusClass}"
+        >
+
+            <div class="budget-header">
+
+                <div>
+
+                    <h3>
+                        ${escapeHTML(
+                            budget.category
+                        )}
+                    </h3>
+
+                    <p>
+                        ${formatMonth(
+                            budget.month
+                        )}
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="delete-budget"
+                    data-id="${budget.id}"
+                >
+                    Delete
+                </button>
+
+            </div>
+
+
+            <div class="budget-values">
+
+                <div>
+                    <span>Budget</span>
+                    <strong>
+                        ${formatCurrency(
+                            budget.limit
+                        )}
+                    </strong>
+                </div>
+
+
+                <div>
+                    <span>Spent</span>
+                    <strong>
+                        ${formatCurrency(
+                            spent
+                        )}
+                    </strong>
+                </div>
+
+
+                <div>
+                    <span>Remaining</span>
+                    <strong>
+                        ${formatCurrency(
+                            remaining
+                        )}
+                    </strong>
+                </div>
+
+            </div>
+
+
+            <div
+                class="budget-progress"
+                aria-label="Budget progress"
+            >
+
+                <div
+                    class="budget-progress-bar"
+                    style="width: ${percentage}%"
+                ></div>
+
+            </div>
+
+
+            <p class="budget-percentage">
+                ${percentage.toFixed(0)}% used
+            </p>
+
+        </article>
+    `;
+
+}
+
+
+/* =========================================================
+   CALCULATE BUDGET SPENDING
+   ========================================================= */
+
+function calculateBudgetSpent(
+    budget
 ) {
 
     const transactions =
@@ -429,24 +412,43 @@ function calculateCategorySpent(
 
 
     return transactions
-        .filter(transaction => {
+        .filter(
+            transaction => {
 
-            return (
-                transaction.type === "expense" &&
-                transaction.category === category &&
-                transaction.date.startsWith(month)
-            );
+                const sameType =
+                    transaction.type ===
+                    "expense";
 
-        })
+
+                const sameCategory =
+                    transaction.category ===
+                    budget.category;
+
+
+                const transactionMonth =
+                    transaction.date
+                        ?.substring(0, 7);
+
+
+                const sameMonth =
+                    transactionMonth ===
+                    budget.month;
+
+
+                return (
+                    sameType &&
+                    sameCategory &&
+                    sameMonth
+                );
+
+            }
+        )
         .reduce(
-            (total, transaction) => {
-
-                return total +
-                    Number(
-                        transaction.amount
-                    );
-
-            },
+            (total, transaction) =>
+                total +
+                Number(
+                    transaction.amount || 0
+                ),
             0
         );
 
@@ -454,95 +456,62 @@ function calculateCategorySpent(
 
 
 /* =========================================================
-   UPDATE SUMMARY
+   BUDGET SUMMARY
    ========================================================= */
 
-export function updateBudgetSummary() {
-
-    const budgets =
-        getBudgets();
-
-
-    const currentMonth =
-        new Date()
-            .toISOString()
-            .slice(0, 7);
-
-
-    const currentBudgets =
-        budgets.filter(
-            budget =>
-                budget.month === currentMonth
-        );
-
+function updateBudgetSummary(
+    budgets
+) {
 
     const totalBudget =
-        currentBudgets.reduce(
+        budgets.reduce(
             (total, budget) =>
                 total +
-                Number(budget.limit),
+                Number(
+                    budget.limit || 0
+                ),
             0
         );
 
 
-    const transactions =
-        getTransactions();
-
-
     const totalSpent =
-        transactions
-            .filter(transaction => {
-
-                return (
-                    transaction.type === "expense" &&
-                    transaction.date.startsWith(
-                        currentMonth
-                    )
-                );
-
-            })
-            .reduce(
-                (total, transaction) =>
-                    total +
-                    Number(
-                        transaction.amount
-                    ),
-                0
-            );
+        budgets.reduce(
+            (total, budget) =>
+                total +
+                calculateBudgetSpent(
+                    budget
+                ),
+            0
+        );
 
 
-    const remaining =
-        totalBudget - totalSpent;
+    const totalRemaining =
+        totalBudget -
+        totalSpent;
 
 
-    if (totalBudgetElement) {
-
-        totalBudgetElement.textContent =
-            formatCurrency(
-                totalBudget
-            );
-
-    }
+    updateElement(
+        "#total-budget",
+        formatCurrency(
+            totalBudget
+        )
+    );
 
 
-    if (totalSpentElement) {
-
-        totalSpentElement.textContent =
-            formatCurrency(
-                totalSpent
-            );
-
-    }
+    updateElement(
+        "#total-budget-spent",
+        formatCurrency(
+            totalSpent
+        )
+    );
 
 
-    if (remainingElement) {
-
-        remainingElement.textContent =
-            formatCurrency(
-                remaining
-            );
-
-    }
+    updateElement(
+        "#total-budget-remaining",
+        formatCurrency(
+            totalRemaining
+        )
+    );
 
 }
 
@@ -551,134 +520,83 @@ export function updateBudgetSummary() {
    DELETE BUDGET
    ========================================================= */
 
-document.addEventListener(
-    "click",
-    event => {
+function setupBudgetDeleteButtons() {
 
-        const button =
-            event.target.closest(
-                ".delete-budget"
-            );
-
-
-        if (!button) {
-            return;
-        }
-
-
-        const id =
-            button.dataset.id;
-
-
-        const confirmed =
-            confirm(
-                "Are you sure you want to delete this budget?"
-            );
-
-
-        if (!confirmed) {
-            return;
-        }
-
-
-        deleteBudget(id);
-
-
-        displayBudgets();
-
-        updateBudgetSummary();
-
-    }
-);
-
-
-/* =========================================================
-   EDIT BUDGET
-   ========================================================= */
-
-document.addEventListener(
-    "click",
-    event => {
-
-        const button =
-            event.target.closest(
-                ".edit-budget"
-            );
-
-
-        if (!button) {
-            return;
-        }
-
-
-        const id =
-            button.dataset.id;
-
-
-        const budgets =
-            getBudgets();
-
-
-        const budget =
-            budgets.find(
-                item =>
-                    item.id === id
-            );
-
-
-        if (!budget) {
-            return;
-        }
-
-
-        const newLimit =
-            prompt(
-                `Enter the new budget for ${budget.category}:`,
-                budget.limit
-            );
-
-
-        if (
-            newLimit === null ||
-            newLimit === ""
-        ) {
-            return;
-        }
-
-
-        const numericLimit =
-            Number(newLimit);
-
-
-        if (
-            Number.isNaN(
-                numericLimit
-            ) ||
-            numericLimit <= 0
-        ) {
-
-            alert(
-                "Please enter a valid amount."
-            );
-
-            return;
-        }
-
-
-        updateBudget(
-            id,
-            {
-                limit: numericLimit
-            }
+    const buttons =
+        document.querySelectorAll(
+            ".delete-budget"
         );
 
 
-        displayBudgets();
+    buttons.forEach(button => {
 
-        updateBudgetSummary();
+        button.addEventListener(
+            "click",
+            () => {
 
+                const id =
+                    button.dataset.id;
+
+
+                const confirmed =
+                    confirm(
+                        "Are you sure you want to delete this budget?"
+                    );
+
+
+                if (!confirmed) {
+                    return;
+                }
+
+
+                const deleted =
+                    deleteBudget(id);
+
+
+                if (!deleted) {
+
+                    alert(
+                        "Budget could not be deleted."
+                    );
+
+                    return;
+
+                }
+
+
+                displayBudgets();
+
+            }
+        );
+
+    });
+
+}
+
+
+/* =========================================================
+   UPDATE ELEMENT
+   ========================================================= */
+
+function updateElement(
+    selector,
+    value
+) {
+
+    const element =
+        document.querySelector(
+            selector
+        );
+
+
+    if (!element) {
+        return;
     }
-);
+
+
+    element.textContent = value;
+
+}
 
 
 /* =========================================================
@@ -695,7 +613,9 @@ function formatCurrency(
             style: "currency",
             currency: "USD"
         }
-    ).format(amount);
+    ).format(
+        Number(amount) || 0
+    );
 
 }
 
@@ -719,13 +639,24 @@ function formatMonth(
         );
 
 
-    return new Intl.DateTimeFormat(
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return month;
+
+    }
+
+
+    return date.toLocaleDateString(
         "en-US",
         {
             year: "numeric",
             month: "long"
         }
-    ).format(date);
+    );
 
 }
 
@@ -734,19 +665,14 @@ function formatMonth(
    ESCAPE HTML
    ========================================================= */
 
-function escapeHTML(
-    value
-) {
+function escapeHTML(value) {
 
-    const div =
-        document.createElement("div");
-
-
-    div.textContent =
-        value ?? "";
-
-
-    return div.innerHTML;
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 
 }
 

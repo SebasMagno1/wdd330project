@@ -1,74 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta name="description"
-        content="FinanceHub currency converter using current exchange rates.">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="FinanceHub currency converter using current exchange rates."
+    >
 
     <title>FinanceHub | Currency Converter</title>
 
-    <link rel="stylesheet" href="css/style.css">
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
 </head>
+
 
 <body>
 
+
     <!-- HEADER -->
+
     <header class="site-header">
 
         <div class="header-container">
 
-            <a href="index.html" class="logo">
+            <a
+                href="index.html"
+                class="logo"
+            >
                 Finance<span>Hub</span>
             </a>
 
+
             <button
                 class="menu-button"
-                aria-label="Open navigation menu">
+                type="button"
+                aria-label="Open navigation menu"
+            >
                 ☰
             </button>
+
 
             <nav class="main-navigation">
 
                 <ul class="navigation">
 
                     <li>
-                        <a href="index.html">Home</a>
+                        <a href="index.html">
+                            Home
+                        </a>
                     </li>
 
                     <li>
-                        <a href="dashboard.html">Dashboard</a>
+                        <a href="dashboard.html">
+                            Dashboard
+                        </a>
                     </li>
 
                     <li>
-                        <a href="transactions.html">Transactions</a>
+                        <a href="transactions.html">
+                            Transactions
+                        </a>
                     </li>
 
                     <li>
-                        <a href="income.html">Income</a>
+                        <a href="income.html">
+                            Income
+                        </a>
                     </li>
 
                     <li>
-                        <a href="expenses.html">Expenses</a>
+                        <a href="expenses.html">
+                            Expenses
+                        </a>
                     </li>
 
                     <li>
-                        <a href="budget.html">Budget</a>
+                        <a href="budget.html">
+                            Budget
+                        </a>
                     </li>
 
                     <li>
-                        <a href="analytics.html">Analytics</a>
+                        <a href="analytics.html">
+                            Analytics
+                        </a>
                     </li>
 
                     <li>
-                        <a class="active" href="currency.html">
+                        <a
+                            class="active"
+                            href="currency.html"
+                        >
                             Currency
                         </a>
                     </li>
 
                     <li>
-                        <a href="news.html">Financial News</a>
+                        <a href="news.html">
+                            Financial News
+                        </a>
                     </li>
 
                 </ul>
@@ -81,9 +122,12 @@
 
 
     <!-- MAIN -->
+
     <main class="currency-page">
 
+
         <!-- PAGE HEADER -->
+
         <section class="page-header">
 
             <h1>
@@ -98,6 +142,7 @@
 
 
         <!-- CONVERTER -->
+
         <section class="converter-section">
 
             <div class="converter-card">
@@ -114,7 +159,9 @@
 
                 <form id="currency-form">
 
+
                     <!-- AMOUNT -->
+
                     <div class="form-group">
 
                         <label for="currency-amount">
@@ -125,15 +172,17 @@
                             type="number"
                             id="currency-amount"
                             name="amount"
-                            min="0"
+                            min="0.01"
                             step="0.01"
                             placeholder="100.00"
-                            required>
+                            required
+                        >
 
                     </div>
 
 
                     <!-- FROM CURRENCY -->
+
                     <div class="form-group">
 
                         <label for="from-currency">
@@ -143,7 +192,8 @@
                         <select
                             id="from-currency"
                             name="from"
-                            required>
+                            required
+                        >
 
                             <option value="USD">
                                 USD - US Dollar
@@ -183,18 +233,19 @@
 
 
                     <!-- SWAP -->
+
                     <button
                         type="button"
                         id="swap-currencies"
                         class="swap-button"
-                        aria-label="Swap currencies">
-
-                        ⇄
-
+                        aria-label="Swap currencies"
+                        title="Swap currencies"
+                    >
                     </button>
 
 
                     <!-- TO CURRENCY -->
+
                     <div class="form-group">
 
                         <label for="to-currency">
@@ -204,7 +255,8 @@
                         <select
                             id="to-currency"
                             name="to"
-                            required>
+                            required
+                        >
 
                             <option value="EUR">
                                 EUR - Euro
@@ -243,23 +295,35 @@
                     </div>
 
 
+                    <!-- ERROR MESSAGE -->
+
+                    <p
+                        id="currency-error"
+                        class="form-error"
+                        role="alert"
+                        aria-live="assertive"
+                    ></p>
+
+
                     <!-- CONVERT BUTTON -->
+
                     <button
                         type="submit"
-                        class="btn primary-btn">
-
+                        class="btn primary-btn"
+                    >
                         Convert
-
-                    </button>
+                </button>
 
                 </form>
 
 
                 <!-- RESULT -->
+
                 <div
                     class="conversion-result"
                     id="conversion-result"
-                    aria-live="polite">
+                    aria-live="polite"
+                >
 
                     <p>
                         Enter an amount to see the conversion.
@@ -269,9 +333,12 @@
 
 
                 <!-- RATE -->
+
                 <div
                     class="exchange-rate"
-                    id="exchange-rate">
+                    id="exchange-rate"
+                    aria-live="polite"
+                >
 
                     <p>
                         Exchange rate information will appear here.
@@ -284,7 +351,8 @@
         </section>
 
 
-        <!-- QUICK CONVERSIONS -->
+        <!-- SUPPORTED CURRENCIES -->
+
         <section class="currency-info">
 
             <div class="section-header">
@@ -302,9 +370,12 @@
 
             <div class="currency-grid">
 
+
                 <article class="currency-card">
 
-                    <h3>USD</h3>
+                    <h3>
+                        USD
+                    </h3>
 
                     <p>
                         US Dollar
@@ -315,7 +386,9 @@
 
                 <article class="currency-card">
 
-                    <h3>EUR</h3>
+                    <h3>
+                        EUR
+                    </h3>
 
                     <p>
                         Euro
@@ -326,7 +399,9 @@
 
                 <article class="currency-card">
 
-                    <h3>GBP</h3>
+                    <h3>
+                        GBP
+                    </h3>
 
                     <p>
                         British Pound
@@ -337,7 +412,9 @@
 
                 <article class="currency-card">
 
-                    <h3>CAD</h3>
+                    <h3>
+                        CAD
+                    </h3>
 
                     <p>
                         Canadian Dollar
@@ -348,7 +425,9 @@
 
                 <article class="currency-card">
 
-                    <h3>MXN</h3>
+                    <h3>
+                        MXN
+                    </h3>
 
                     <p>
                         Mexican Peso
@@ -359,10 +438,38 @@
 
                 <article class="currency-card">
 
-                    <h3>BOB</h3>
+                    <h3>
+                        BOB
+                    </h3>
 
                     <p>
                         Bolivian Boliviano
+                    </p>
+
+                </article>
+
+
+                <article class="currency-card">
+
+                    <h3>
+                        JPY
+                    </h3>
+
+                    <p>
+                        Japanese Yen
+                    </p>
+
+                </article>
+
+
+                <article class="currency-card">
+
+                    <h3>
+                        CNY
+                    </h3>
+
+                    <p>
+                        Chinese Yuan
                     </p>
 
                 </article>
@@ -374,25 +481,24 @@
     </main>
 
 
-    <!-- FOOTER -->
-    <footer class="site-footer">
+        <footer class="site-footer">
 
-        <div class="footer-bottom">
+            <div class="footer-bottom">
 
             <p>
                 &copy; 2026 FinanceHub. All rights reserved.
             </p>
 
-        </div>
+            </div>
 
-    </footer>
+        </footer>
 
 
-    <!-- JAVASCRIPT -->
-    <script
-        type="module"
-        src="js/currency.js">
-    </script>
+        <script
+            type="module"
+            src="scripts/currency.js">
+        </script>
 
-</body>
+    </body>
 </html>
+

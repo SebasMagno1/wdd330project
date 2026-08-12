@@ -1,74 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta name="description"
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="description"
         content="FinanceHub budget planning - Create and manage monthly spending limits.">
 
     <title>FinanceHub | Budget</title>
 
-    <link rel="stylesheet" href="css/style.css">
+    <link
+        rel="stylesheet"
+        href="css/style.css">
+
 </head>
+
 
 <body>
 
-    <!-- HEADER -->
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
     <header class="site-header">
 
         <div class="header-container">
 
-            <a href="index.html" class="logo">
+            <a
+                href="index.html"
+                class="logo">
+
                 Finance<span>Hub</span>
+
             </a>
+
 
             <button
                 class="menu-button"
                 aria-label="Open navigation menu">
+
                 ☰
+
             </button>
+
 
             <nav class="main-navigation">
 
                 <ul class="navigation">
 
                     <li>
-                        <a href="index.html">Home</a>
-                    </li>
-
-                    <li>
-                        <a href="dashboard.html">Dashboard</a>
-                    </li>
-
-                    <li>
-                        <a href="transactions.html">Transactions</a>
-                    </li>
-
-                    <li>
-                        <a href="income.html">Income</a>
-                    </li>
-
-                    <li>
-                        <a href="expenses.html">Expenses</a>
-                    </li>
-
-                    <li>
-                        <a class="active" href="budget.html">
-                            Budget
+                        <a href="index.html">
+                            Home
                         </a>
                     </li>
 
                     <li>
-                        <a href="analytics.html">Analytics</a>
+                        <a href="dashboard.html">
+                            Dashboard
+                        </a>
                     </li>
 
                     <li>
-                        <a href="currency.html">Currency</a>
+                        <a href="transactions.html">
+                            Transactions
+                        </a>
                     </li>
 
                     <li>
-                        <a href="news.html">Financial News</a>
+                        <a href="income.html">
+                            Income
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="expenses.html">
+                            Expenses
+                        </a>
+                    </li>
+
+                    <li>
+                        <a
+                            class="active"
+                            href="budget.html">
+
+                            Budget
+
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="analytics.html">
+                            Analytics
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="currency.html">
+                            Currency
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="news.html">
+                            Financial News
+                        </a>
                     </li>
 
                 </ul>
@@ -80,10 +122,16 @@
     </header>
 
 
-    <!-- MAIN -->
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
     <main class="budget-page">
 
+
         <!-- PAGE HEADER -->
+
         <section class="page-header">
 
             <h1>
@@ -97,8 +145,15 @@
         </section>
 
 
-        <!-- BUDGET SUMMARY -->
+
+        <!-- =================================================
+             BUDGET SUMMARY
+        ================================================== -->
+
         <section class="budget-summary">
+
+
+            <!-- TOTAL BUDGET -->
 
             <article class="summary-card">
 
@@ -121,6 +176,9 @@
             </article>
 
 
+
+            <!-- TOTAL SPENT -->
+
             <article class="summary-card">
 
                 <div class="summary-icon">
@@ -141,6 +199,9 @@
 
             </article>
 
+
+
+            <!-- REMAINING -->
 
             <article class="summary-card">
 
@@ -165,7 +226,11 @@
         </section>
 
 
-        <!-- BUDGET FORM -->
+
+        <!-- =================================================
+             BUDGET FORM
+        ================================================== -->
+
         <section class="form-section">
 
             <div class="form-card">
@@ -174,9 +239,12 @@
                     Create Monthly Budget
                 </h2>
 
+
                 <form id="budget-form">
 
-                    <!-- Month -->
+
+                    <!-- MONTH -->
+
                     <div class="form-group">
 
                         <label for="budget-month">
@@ -192,7 +260,9 @@
                     </div>
 
 
-                    <!-- Category -->
+
+                    <!-- CATEGORY -->
+
                     <div class="form-group">
 
                         <label for="budget-category">
@@ -249,7 +319,9 @@
                     </div>
 
 
-                    <!-- Limit -->
+
+                    <!-- LIMIT -->
+
                     <div class="form-group">
 
                         <label for="budget-limit">
@@ -260,7 +332,7 @@
                             type="number"
                             id="budget-limit"
                             name="limit"
-                            min="0"
+                            min="0.01"
                             step="0.01"
                             placeholder="0.00"
                             required>
@@ -268,7 +340,9 @@
                     </div>
 
 
-                    <!-- Buttons -->
+
+                    <!-- BUTTONS -->
+
                     <div class="form-buttons">
 
                         <button
@@ -278,6 +352,7 @@
                             Save Budget
 
                         </button>
+
 
                         <button
                             type="reset"
@@ -296,7 +371,11 @@
         </section>
 
 
-        <!-- BUDGET CATEGORIES -->
+
+        <!-- =================================================
+             BUDGET CATEGORIES
+        ================================================== -->
+
         <section class="budget-categories">
 
             <div class="section-header">
@@ -320,42 +399,7 @@
                 class="budget-list"
                 id="budget-list">
 
-                <!-- Budget categories generated by JavaScript -->
-
-                <article class="budget-item">
-
-                    <div class="budget-item-header">
-
-                        <div>
-
-                            <h3>
-                                Food
-                            </h3>
-
-                            <p>
-                                Spent: $0.00
-                            </p>
-
-                        </div>
-
-                        <strong>
-                            $0.00
-                        </strong>
-
-                    </div>
-
-
-                    <div class="progress-bar">
-
-                        <div
-                            class="progress-fill"
-                            style="width: 0%;">
-
-                        </div>
-
-                    </div>
-
-                </article>
+                <!-- JavaScript generates budgets here -->
 
             </div>
 
@@ -364,25 +408,27 @@
     </main>
 
 
-    <!-- FOOTER -->
-    <footer class="site-footer">
 
-        <div class="footer-bottom">
+        <!-- FOOTER -->
+        <footer class="site-footer">
 
-            <p>
-                &copy; 2026 FinanceHub. All rights reserved.
-            </p>
+            <div class="footer-bottom">
 
-        </div>
+                <p>
+                    &copy; 2026 FinanceHub. All rights reserved.
+                </p>
 
-    </footer>
+            </div>
+
+        </footer>
 
 
-    <!-- JAVASCRIPT -->
-    <script
-        type="module"
-        src="js/budget.js">
-    </script>
+        <!-- JAVASCRIPT -->
+        <script
+            type="module"
+            src="scripts/budget.js">
+        </script>
 
-</body>
+    </body>
 </html>
+
