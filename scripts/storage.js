@@ -2,7 +2,34 @@
  * FinanceHub
  * Storage Module
  *
- * Handles all localStorage operations.
+ * Central data layer for the entire application.
+ *
+ * All modules use the same data format:
+ *
+ * TRANSACTION
+ * {
+ *     id,
+ *     type,
+ *     description,
+ *     amount,
+ *     category,
+ *     date,
+ *     notes,
+ *     paymentMethod
+ * }
+ *
+ * BUDGET
+ * {
+ *     id,
+ *     month,
+ *     category,
+ *     limit
+ * }
+ *
+ * PREFERENCES
+ * {
+ *     currency
+ * }
  */
 
 
@@ -25,137 +52,119 @@ const STORAGE_KEYS = {
 
 
 /* =========================================================
-   GENERATE UNIQUE ID
+   ID GENERATOR
    ========================================================= */
 
 export function generateId() {
 
+    if (
+        typeof crypto !== "undefined" &&
+        typeof crypto.randomUUID === "function"
+    ) {
+
+        return crypto.randomUUID();
+
+    }
+
+
     return (
-        Date.now().toString() +
+        Date.now().toString(36) +
         "-" +
         Math.random()
             .toString(36)
-            .substring(2, 9)
+            .substring(2, 10)
     );
-
 }
 
 
 /* =========================================================
-   TRANSACTIONS
+   GENERIC STORAGE HELPERS
    ========================================================= */
 
-
-/*
- * Get all transactions
- */
-export function getTransactions() {
-
-    try {
-
-        const data =
-            localStorage.getItem(
-                STORAGE_KEYS.TRANSACTIONS
-            );
-
-
-        if (!data) {
-            return [];
-        }
-
-
-        const transactions =
-            JSON.parse(data);
-
-
-        return Array.isArray(
-            transactions
-        )
-            ? transactions
-            : [];
-
-
-    } catch (error) {
-
-        console.error(
-            "Error reading transactions:",
-            error
-        );
-
-        return [];
-
-    }
-
-}
-
-
-/*
- * Save transactions
- */
-export function saveTransactions(
-    transactions
+function readStorage(
+    key,
+    defaultValue
 ) {
 
     try {
 
-        if (
-            !Array.isArray(
-                transactions
-            )
-        ) {
+        const data =
+            localStorage.getItem(key);
 
-            console.error(
-                "Transactions must be an array."
-            );
 
-            return false;
-
+        if (!data) {
+            return defaultValue;
         }
 
 
+        const parsed =
+            JSON.parse(data);
+
+
+        return parsed;
+
+    } catch (error) {
+
+        console.error(
+            `Error reading ${key}:`,
+            error
+        );
+
+        return defaultValue;
+    }
+}
+
+
+function writeStorage(
+    key,
+    data
+) {
+
+    try {
+
         localStorage.setItem(
-            STORAGE_KEYS.TRANSACTIONS,
-            JSON.stringify(
-                transactions
-            )
+            key,
+            JSON.stringify(data)
         );
 
 
         return true;
 
-
     } catch (error) {
 
         console.error(
-            "Error saving transactions:",
+            `Error saving ${key}:`,
             error
         );
 
         return false;
-
     }
-
 }
 
 
-/*
- * Add a transaction
- */
-export function addTransaction(
+/* =========================================================
+   TRANSACTION NORMALIZATION
+   ========================================================= */
+
+function normalizeTransaction(
     transaction
 ) {
 
-    if (!transaction) {
+    if (
+        !transaction ||
+        typeof transaction !== "object"
+    ) {
+
         return null;
     }
 
 
-    /* -----------------------------------------------------
-       VALIDATE TYPE
-       ----------------------------------------------------- */
-
     const type =
-        transaction.type;
+        String(
+            transaction.type || ""
+        )
+            .trim()
+            .toLowerCase();
 
 
     if (
@@ -163,18 +172,9 @@ export function addTransaction(
         type !== "expense"
     ) {
 
-        console.error(
-            "Transaction type must be income or expense."
-        );
-
         return null;
-
     }
 
-
-    /* -----------------------------------------------------
-       VALIDATE AMOUNT
-       ----------------------------------------------------- */
 
     const amount =
         Number(
@@ -187,70 +187,158 @@ export function addTransaction(
         amount <= 0
     ) {
 
-        console.error(
-            "Invalid transaction amount."
-        );
-
         return null;
-
     }
 
 
-    /* -----------------------------------------------------
-       CREATE TRANSACTION
-       ----------------------------------------------------- */
+    const description =
+        String(
+            transaction.description || ""
+        ).trim();
 
-    const newTransaction = {
+
+    const category =
+        String(
+            transaction.category || ""
+        ).trim();
+
+
+    const date =
+        String(
+            transaction.date || ""
+        ).trim();
+
+
+    const notes =
+        String(
+            transaction.notes || ""
+        ).trim();
+
+
+    const paymentMethod =
+        String(
+            transaction.paymentMethod || ""
+        ).trim();
+
+
+    return {
 
         id:
-            transaction.id ||
-            generateId(),
+            String(
+                transaction.id ||
+                generateId()
+            ),
 
         type,
 
-        description:
-            String(
-                transaction.description ||
-                ""
-            ).trim(),
+        description,
 
         amount,
 
-        category:
-            String(
-                transaction.category ||
-                ""
-            ).trim(),
+        category,
 
-        date:
-            transaction.date ||
-            "",
+        date,
 
-        notes:
-            String(
-                transaction.notes ||
-                ""
-            ).trim(),
+        notes,
 
-        paymentMethod:
-            String(
-                transaction.paymentMethod ||
-                ""
-            ).trim()
+        paymentMethod
 
     };
+}
 
 
-    /* -----------------------------------------------------
-       SAVE
-       ----------------------------------------------------- */
+/* =========================================================
+   TRANSACTIONS
+   ========================================================= */
+
+
+/*
+ * Get all transactions.
+ */
+export function getTransactions() {
+
+    const data =
+        readStorage(
+            STORAGE_KEYS.TRANSACTIONS,
+            []
+        );
+
+
+    if (!Array.isArray(data)) {
+        return [];
+    }
+
+
+    return data
+        .map(normalizeTransaction)
+        .filter(Boolean);
+}
+
+
+/*
+ * Save all transactions.
+ */
+export function saveTransactions(
+    transactions
+) {
+
+    if (
+        !Array.isArray(
+            transactions
+        )
+    ) {
+
+        console.error(
+            "Transactions must be an array."
+        );
+
+        return false;
+    }
+
+
+    const normalizedTransactions =
+        transactions
+            .map(normalizeTransaction)
+            .filter(Boolean);
+
+
+    return writeStorage(
+        STORAGE_KEYS.TRANSACTIONS,
+        normalizedTransactions
+    );
+}
+
+
+/*
+ * Add a transaction.
+ */
+export function addTransaction(
+    transaction
+) {
+
+    const normalized =
+        normalizeTransaction(
+            transaction
+        );
+
+
+    if (!normalized) {
+
+        console.error(
+            "Invalid transaction.",
+            transaction
+        );
+
+        return null;
+    }
+
 
     const transactions =
         getTransactions();
 
 
     transactions.push(
-        newTransaction
+        normalized
     );
 
 
@@ -265,13 +353,12 @@ export function addTransaction(
     }
 
 
-    return newTransaction;
-
+    return normalized;
 }
 
 
 /*
- * Update a transaction
+ * Update a transaction.
  */
 export function updateTransaction(
     id,
@@ -280,11 +367,11 @@ export function updateTransaction(
 
     if (
         !id ||
-        !updatedData
+        !updatedData ||
+        typeof updatedData !== "object"
     ) {
 
         return null;
-
     }
 
 
@@ -295,76 +382,52 @@ export function updateTransaction(
     const index =
         transactions.findIndex(
             transaction =>
-                transaction.id === id
+                String(transaction.id) ===
+                String(id)
         );
 
 
     if (index === -1) {
-        return null;
-    }
 
-
-    /* -----------------------------------------------------
-       VALIDATE TYPE IF PROVIDED
-       ----------------------------------------------------- */
-
-    if (
-        updatedData.type !== undefined &&
-        updatedData.type !== "income" &&
-        updatedData.type !== "expense"
-    ) {
-
-        console.error(
-            "Transaction type must be income or expense."
+        console.warn(
+            "Transaction not found:",
+            id
         );
 
         return null;
-
     }
 
 
-    /* -----------------------------------------------------
-       VALIDATE AMOUNT
-       ----------------------------------------------------- */
-
-    const updatedAmount =
-        updatedData.amount !== undefined
-            ? Number(
-                updatedData.amount
-            )
-            : transactions[index].amount;
-
-
-    if (
-        !Number.isFinite(
-            updatedAmount
-        ) ||
-        updatedAmount <= 0
-    ) {
-
-        console.error(
-            "Invalid transaction amount."
-        );
-
-        return null;
-
-    }
-
-
-    /* -----------------------------------------------------
-       UPDATE
-       ----------------------------------------------------- */
-
-    transactions[index] = {
+    const updatedTransaction = {
 
         ...transactions[index],
 
         ...updatedData,
 
-        amount:
-            updatedAmount
+        id:
+            transactions[index].id
 
     };
+
+
+    const normalized =
+        normalizeTransaction(
+            updatedTransaction
+        );
+
+
+    if (!normalized) {
+
+        console.error(
+            "Updated transaction is invalid."
+        );
+
+        return null;
+    }
+
+
+    transactions[index] =
+        normalized;
 
 
     const saved =
@@ -378,170 +441,264 @@ export function updateTransaction(
     }
 
 
-    return transactions[index];
-
+    return normalized;
 }
 
 
 /*
- * Delete a transaction
+ * Delete a transaction.
  */
 export function deleteTransaction(
     id
 ) {
 
+    if (!id) {
+        return false;
+    }
+
+
     const transactions =
         getTransactions();
 
 
-    const filteredTransactions =
+    const filtered =
         transactions.filter(
             transaction =>
-                transaction.id !== id
+                String(transaction.id) !==
+                String(id)
         );
 
 
     if (
-        filteredTransactions.length ===
+        filtered.length ===
         transactions.length
     ) {
 
         return false;
-
     }
 
 
     return saveTransactions(
-        filteredTransactions
+        filtered
     );
-
 }
 
 
 /*
- * Get one transaction by ID
+ * Get one transaction.
  */
 export function getTransactionById(
     id
 ) {
 
+    if (!id) {
+        return null;
+    }
+
+
     const transactions =
         getTransactions();
 
 
-    return transactions.find(
-        transaction =>
-            transaction.id === id
+    return (
+        transactions.find(
+            transaction =>
+                String(transaction.id) ===
+                String(id)
+        ) || null
     );
+}
 
+
+/*
+ * Delete all transactions.
+ */
+export function clearTransactions() {
+
+    return saveTransactions([]);
 }
 
 
 /* =========================================================
-   BUDGETS
+   TRANSACTION HELPERS
    ========================================================= */
 
 
 /*
- * Get all budgets
+ * Get only income.
  */
-export function getBudgets() {
+export function getIncomeTransactions() {
 
-    try {
-
-        const data =
-            localStorage.getItem(
-                STORAGE_KEYS.BUDGETS
-            );
-
-
-        if (!data) {
-            return [];
-        }
-
-
-        const budgets =
-            JSON.parse(data);
-
-
-        return Array.isArray(
-            budgets
-        )
-            ? budgets
-            : [];
-
-
-    } catch (error) {
-
-        console.error(
-            "Error reading budgets:",
-            error
+    return getTransactions()
+        .filter(
+            transaction =>
+                transaction.type ===
+                "income"
         );
-
-        return [];
-
-    }
-
 }
 
 
 /*
- * Save budgets
+ * Get only expenses.
  */
-export function saveBudgets(
-    budgets
+export function getExpenseTransactions() {
+
+    return getTransactions()
+        .filter(
+            transaction =>
+                transaction.type ===
+                "expense"
+        );
+}
+
+
+/*
+ * Get total income.
+ */
+export function getTotalIncome() {
+
+    return getIncomeTransactions()
+        .reduce(
+            (total, transaction) =>
+                total +
+                transaction.amount,
+            0
+        );
+}
+
+
+/*
+ * Get total expenses.
+ */
+export function getTotalExpenses() {
+
+    return getExpenseTransactions()
+        .reduce(
+            (total, transaction) =>
+                total +
+                transaction.amount,
+            0
+        );
+}
+
+
+/*
+ * Get balance.
+ */
+export function getBalance() {
+
+    return (
+        getTotalIncome() -
+        getTotalExpenses()
+    );
+}
+
+
+/* =========================================================
+   MONTHLY TRANSACTIONS
+   ========================================================= */
+
+
+/*
+ * Get transactions for a month.
+ *
+ * Format:
+ * YYYY-MM
+ */
+export function getTransactionsByMonth(
+    month
 ) {
 
-    try {
-
-        if (
-            !Array.isArray(
-                budgets
-            )
-        ) {
-
-            console.error(
-                "Budgets must be an array."
-            );
-
-            return false;
-
-        }
-
-
-        localStorage.setItem(
-            STORAGE_KEYS.BUDGETS,
-            JSON.stringify(
-                budgets
-            )
-        );
-
-
-        return true;
-
-
-    } catch (error) {
-
-        console.error(
-            "Error saving budgets:",
-            error
-        );
-
-        return false;
-
+    if (!month) {
+        return [];
     }
 
+
+    return getTransactions()
+        .filter(
+            transaction =>
+                transaction.date.startsWith(
+                    month
+                )
+        );
 }
 
 
 /*
- * Add a budget
+ * Get monthly income.
  */
-export function addBudget(
+export function getMonthlyIncome(
+    month
+) {
+
+    return getTransactionsByMonth(
+        month
+    )
+        .filter(
+            transaction =>
+                transaction.type ===
+                "income"
+        )
+        .reduce(
+            (total, transaction) =>
+                total +
+                transaction.amount,
+            0
+        );
+}
+
+
+/*
+ * Get monthly expenses.
+ */
+export function getMonthlyExpenses(
+    month
+) {
+
+    return getTransactionsByMonth(
+        month
+    )
+        .filter(
+            transaction =>
+                transaction.type ===
+                "expense"
+        )
+        .reduce(
+            (total, transaction) =>
+                total +
+                transaction.amount,
+            0
+        );
+}
+
+
+/*
+ * Get monthly balance.
+ */
+export function getMonthlyBalance(
+    month
+) {
+
+    return (
+        getMonthlyIncome(month) -
+        getMonthlyExpenses(month)
+    );
+}
+
+
+/* =========================================================
+   BUDGET NORMALIZATION
+   ========================================================= */
+
+function normalizeBudget(
     budget
 ) {
 
-    if (!budget) {
+    if (
+        !budget ||
+        typeof budget !== "object"
+    ) {
+
         return null;
     }
 
@@ -557,34 +714,118 @@ export function addBudget(
         limit <= 0
     ) {
 
-        console.error(
-            "Invalid budget limit."
-        );
-
         return null;
-
     }
 
 
-    const newBudget = {
+    return {
 
         id:
-            budget.id ||
-            generateId(),
+            String(
+                budget.id ||
+                generateId()
+            ),
 
         month:
-            budget.month ||
-            "",
+            String(
+                budget.month || ""
+            ).trim(),
 
         category:
             String(
-                budget.category ||
-                ""
+                budget.category || ""
             ).trim(),
 
         limit
 
     };
+}
+
+
+/* =========================================================
+   BUDGETS
+   ========================================================= */
+
+
+/*
+ * Get all budgets.
+ */
+export function getBudgets() {
+
+    const data =
+        readStorage(
+            STORAGE_KEYS.BUDGETS,
+            []
+        );
+
+
+    if (!Array.isArray(data)) {
+        return [];
+    }
+
+
+    return data
+        .map(normalizeBudget)
+        .filter(Boolean);
+}
+
+
+/*
+ * Save budgets.
+ */
+export function saveBudgets(
+    budgets
+) {
+
+    if (
+        !Array.isArray(
+            budgets
+        )
+    ) {
+
+        console.error(
+            "Budgets must be an array."
+        );
+
+        return false;
+    }
+
+
+    const normalizedBudgets =
+        budgets
+            .map(normalizeBudget)
+            .filter(Boolean);
+
+
+    return writeStorage(
+        STORAGE_KEYS.BUDGETS,
+        normalizedBudgets
+    );
+}
+
+
+/*
+ * Add budget.
+ */
+export function addBudget(
+    budget
+) {
+
+    const normalized =
+        normalizeBudget(
+            budget
+        );
+
+
+    if (!normalized) {
+
+        console.error(
+            "Invalid budget.",
+            budget
+        );
+
+        return null;
+    }
 
 
     const budgets =
@@ -592,7 +833,7 @@ export function addBudget(
 
 
     budgets.push(
-        newBudget
+        normalized
     );
 
 
@@ -607,13 +848,12 @@ export function addBudget(
     }
 
 
-    return newBudget;
-
+    return normalized;
 }
 
 
 /*
- * Update a budget
+ * Update budget.
  */
 export function updateBudget(
     id,
@@ -622,11 +862,11 @@ export function updateBudget(
 
     if (
         !id ||
-        !updatedData
+        !updatedData ||
+        typeof updatedData !== "object"
     ) {
 
         return null;
-
     }
 
 
@@ -637,49 +877,47 @@ export function updateBudget(
     const index =
         budgets.findIndex(
             budget =>
-                budget.id === id
+                String(budget.id) ===
+                String(id)
         );
 
 
     if (index === -1) {
+
         return null;
     }
 
 
-    const updatedLimit =
-        updatedData.limit !== undefined
-            ? Number(
-                updatedData.limit
-            )
-            : budgets[index].limit;
-
-
-    if (
-        !Number.isFinite(
-            updatedLimit
-        ) ||
-        updatedLimit <= 0
-    ) {
-
-        console.error(
-            "Invalid budget limit."
-        );
-
-        return null;
-
-    }
-
-
-    budgets[index] = {
+    const updatedBudget = {
 
         ...budgets[index],
 
         ...updatedData,
 
-        limit:
-            updatedLimit
+        id:
+            budgets[index].id
 
     };
+
+
+    const normalized =
+        normalizeBudget(
+            updatedBudget
+        );
+
+
+    if (!normalized) {
+
+        console.error(
+            "Updated budget is invalid."
+        );
+
+        return null;
+    }
+
+
+    budgets[index] =
+        normalized;
 
 
     const saved =
@@ -693,155 +931,179 @@ export function updateBudget(
     }
 
 
-    return budgets[index];
-
+    return normalized;
 }
 
 
 /*
- * Delete a budget
+ * Delete budget.
  */
 export function deleteBudget(
     id
 ) {
 
+    if (!id) {
+        return false;
+    }
+
+
     const budgets =
         getBudgets();
 
 
-    const filteredBudgets =
+    const filtered =
         budgets.filter(
             budget =>
-                budget.id !== id
+                String(budget.id) !==
+                String(id)
         );
 
 
     if (
-        filteredBudgets.length ===
+        filtered.length ===
         budgets.length
     ) {
 
         return false;
-
     }
 
 
     return saveBudgets(
-        filteredBudgets
+        filtered
     );
+}
 
+
+/*
+ * Get budget by category.
+ */
+export function getBudgetByCategory(
+    category,
+    month = ""
+) {
+
+    return (
+        getBudgets().find(
+            budget =>
+                budget.category ===
+                    category &&
+                (
+                    !month ||
+                    budget.month === month
+                )
+        ) || null
+    );
+}
+
+
+/*
+ * Get budgets by month.
+ */
+export function getBudgetsByMonth(
+    month
+) {
+
+    return getBudgets()
+        .filter(
+            budget =>
+                budget.month === month
+        );
+}
+
+
+/*
+ * Delete all budgets.
+ */
+export function clearBudgets() {
+
+    return saveBudgets([]);
 }
 
 
 /* =========================================================
-   USER PREFERENCES
+   PREFERENCES
    ========================================================= */
 
 
 /*
- * Get user preferences
+ * Get preferences.
  */
 export function getPreferences() {
 
-    try {
-
-        const data =
-            localStorage.getItem(
-                STORAGE_KEYS.PREFERENCES
-            );
-
-
-        if (!data) {
-
-            return {
+    const data =
+        readStorage(
+            STORAGE_KEYS.PREFERENCES,
+            {
                 currency: "USD"
-            };
-
-        }
-
-
-        const preferences =
-            JSON.parse(data);
-
-
-        return preferences &&
-            typeof preferences ===
-                "object"
-
-            ? preferences
-
-            : {
-                currency: "USD"
-            };
-
-
-    } catch (error) {
-
-        console.error(
-            "Error reading preferences:",
-            error
+            }
         );
+
+
+    if (
+        !data ||
+        typeof data !== "object" ||
+        Array.isArray(data)
+    ) {
 
         return {
             currency: "USD"
         };
-
     }
 
+
+    return {
+
+        currency:
+            String(
+                data.currency ||
+                "USD"
+            ).toUpperCase()
+
+    };
 }
 
 
 /*
- * Save user preferences
+ * Save preferences.
  */
 export function savePreferences(
     preferences
 ) {
 
-    try {
-
-        if (
-            !preferences ||
-            typeof preferences !==
-                "object"
-        ) {
-
-            console.error(
-                "Invalid preferences."
-            );
-
-            return false;
-
-        }
-
-
-        localStorage.setItem(
-            STORAGE_KEYS.PREFERENCES,
-            JSON.stringify(
-                preferences
-            )
-        );
-
-
-        return true;
-
-
-    } catch (error) {
+    if (
+        !preferences ||
+        typeof preferences !== "object" ||
+        Array.isArray(preferences)
+    ) {
 
         console.error(
-            "Error saving preferences:",
-            error
+            "Invalid preferences."
         );
 
         return false;
-
     }
 
+
+    const normalized = {
+
+        currency:
+            String(
+                preferences.currency ||
+                "USD"
+            ).toUpperCase()
+
+    };
+
+
+    return writeStorage(
+        STORAGE_KEYS.PREFERENCES,
+        normalized
+    );
 }
 
 
 /* =========================================================
-   CLEAR ALL DATA
+   CLEAR EVERYTHING
    ========================================================= */
 
 export function clearAllData() {
@@ -861,4 +1123,3 @@ export function clearAllData() {
     );
 
 }
-

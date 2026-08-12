@@ -2,11 +2,10 @@
  * FinanceHub
  * Dashboard Module
  *
- * Displays:
- * - Total income
- * - Total expenses
- * - Balance
- * - Remaining budget
+ * Responsibilities:
+ * - Summary cards
+ * - Income / Expense chart
+ * - Current month budget
  * - Recent transactions
  */
 
@@ -17,24 +16,25 @@ import {
 
 
 /* =========================================================
-   INITIALIZE DASHBOARD
+   CONFIGURATION
+   ========================================================= */
+
+const CURRENCY = "USD";
+
+let incomeExpenseChart = null;
+
+
+/* =========================================================
+   INITIALIZE
    ========================================================= */
 
 document.addEventListener(
     "DOMContentLoaded",
-    () => {
-
-        updateDashboard();
-
-    }
+    initializeDashboard
 );
 
 
-/* =========================================================
-   MAIN DASHBOARD FUNCTION
-   ========================================================= */
-
-function updateDashboard() {
+function initializeDashboard() {
 
     const transactions =
         getTransactions();
@@ -42,85 +42,125 @@ function updateDashboard() {
     const budgets =
         getBudgets();
 
+    const currentMonth =
+        getCurrentMonth();
 
-    /* =====================================================
-       CALCULATE TOTAL INCOME
-       ===================================================== */
 
-    const income =
+    updateSummary(
+        transactions,
+        budgets,
+        currentMonth
+    );
+
+
+    displayRecentTransactions(
         transactions
-            .filter(
-                transaction =>
-                    transaction.type === "income"
-            )
-            .reduce(
-                (total, transaction) =>
-                    total +
-                    Number(transaction.amount || 0),
-                0
-            );
+    );
 
 
-    /* =====================================================
-       CALCULATE TOTAL EXPENSES
-       ===================================================== */
-
-    const expenses =
-        transactions
-            .filter(
-                transaction =>
-                    transaction.type === "expense"
-            )
-            .reduce(
-                (total, transaction) =>
-                    total +
-                    Number(transaction.amount || 0),
-                0
-            );
+    createIncomeExpenseChart(
+        transactions,
+        currentMonth
+    );
+}
 
 
-    /* =====================================================
-       CALCULATE BALANCE
-       ===================================================== */
+/* =========================================================
+   SUMMARY
+   ========================================================= */
+
+function updateSummary(
+    transactions,
+    budgets,
+    currentMonth
+) {
+
+    const totalIncome =
+        calculateTotal(
+            transactions,
+            "income"
+        );
+
+
+    const totalExpenses =
+        calculateTotal(
+            transactions,
+            "expense"
+        );
+
 
     const balance =
-        income - expenses;
+        totalIncome -
+        totalExpenses;
 
 
-    /* =====================================================
-       CALCULATE TOTAL BUDGET
-       ===================================================== */
+    /* -----------------------------------------------------
+       CURRENT MONTH BUDGET
+       ----------------------------------------------------- */
+
+    const monthlyBudgets =
+        budgets.filter(
+            budget =>
+                budget.month ===
+                currentMonth
+        );
+
 
     const totalBudget =
-        budgets.reduce(
+        monthlyBudgets.reduce(
             (total, budget) =>
                 total +
-                Number(budget.limit || 0),
+                Number(
+                    budget.limit || 0
+                ),
             0
         );
 
 
-    /* =====================================================
-       CALCULATE BUDGET REMAINING
-       ===================================================== */
+    /* -----------------------------------------------------
+       CURRENT MONTH EXPENSES
+       ----------------------------------------------------- */
+
+    const monthlyExpenses =
+        transactions
+            .filter(
+                transaction =>
+                    transaction.type ===
+                    "expense" &&
+                    transaction.date?.startsWith(
+                        currentMonth
+                    )
+            )
+            .reduce(
+                (total, transaction) =>
+                    total +
+                    Number(
+                        transaction.amount || 0
+                    ),
+                0
+            );
+
+
+
 
     const budgetRemaining =
-        totalBudget - expenses;
+        totalBudget -
+        monthlyExpenses;
 
 
-    /* =====================================================
-       UPDATE SUMMARY CARDS
-       ===================================================== */
+    /* -----------------------------------------------------
+       UPDATE CARDS
+       ----------------------------------------------------- */
 
     updateElement(
         "#total-income",
-        formatCurrency(income)
+        formatCurrency(totalIncome)
     );
 
 
     updateElement(
         "#total-expenses",
-        formatCurrency(expenses)
+        formatCurrency(totalExpenses)
     );
 
 
@@ -130,15 +170,7 @@ function updateDashboard() {
     );
 
 
-    updateElement(
-        "#budget-remaining",
-        formatCurrency(budgetRemaining)
-    );
-
-
-    /* =====================================================
-       UPDATE MONTHLY BUDGET
-       ===================================================== */
+    
 
     updateElement(
         "#monthly-budget",
@@ -148,66 +180,51 @@ function updateDashboard() {
 
     updateElement(
         "#budget-spent",
-        formatCurrency(expenses)
+        formatCurrency(monthlyExpenses)
     );
 
 
-    /* =====================================================
-       UPDATE BUDGET PROGRESS
-       ===================================================== */
+    updateElement(
+        "#budget-remaining",
+        formatCurrency(budgetRemaining)
+    );
+
 
     updateBudgetProgress(
         totalBudget,
-        expenses
+        monthlyExpenses
     );
-
-
-    /* =====================================================
-       DISPLAY RECENT TRANSACTIONS
-       ===================================================== */
-
-    displayRecentTransactions(
-        transactions
-    );
-
-    
+   
 }
 
 
 /* =========================================================
-   UPDATE ELEMENT
+   CALCULATE TOTAL
    ========================================================= */
 
-function updateElement(
-    selector,
-    value
+function calculateTotal(
+    transactions,
+    type
 ) {
 
-    const element =
-        document.querySelector(
-            selector
+    return transactions
+        .filter(
+            transaction =>
+                transaction.type === type
+        )
+        .reduce(
+            (total, transaction) =>
+                total +
+                Number(
+                    transaction.amount || 0
+                ),
+            0
         );
-
-
-    if (!element) {
-
-        console.warn(
-            `Dashboard element not found: ${selector}`
-        );
-
-        return;
-
-    }
-
-
-    element.textContent =
-        value;
-
 }
 
 
 /* =========================================================
-   UPDATE BUDGET PROGRESS
+   BUDGET PROGRESS
    ========================================================= */
 
 function updateBudgetProgress(
@@ -233,14 +250,22 @@ function updateBudgetProgress(
 
         progress.style.width = "0%";
 
-        return;
+        progress.setAttribute(
+            "aria-valuenow",
+            "0"
+        );
 
+        return;
+    
     }
 
 
     const percentage =
         Math.min(
-            (spent / budget) * 100,
+            Math.max(
+                (spent / budget) * 100,
+                0
+            ),
             100
         );
 
@@ -248,11 +273,22 @@ function updateBudgetProgress(
     progress.style.width =
         `${percentage}%`;
 
+
+    progress.setAttribute(
+        "aria-valuenow",
+        percentage.toFixed(0)
+    );
+
+
+    progress.setAttribute(
+        "aria-valuemax",
+        "100"
+    );
 }
 
 
 /* =========================================================
-   DISPLAY RECENT TRANSACTIONS
+   RECENT TRANSACTIONS
    ========================================================= */
 
 function displayRecentTransactions(
@@ -266,37 +302,26 @@ function displayRecentTransactions(
 
 
     if (!container) {
-
-        console.warn(
-            "Recent transactions container not found."
-        );
-
+    
         return;
-
+    
     }
 
 
-    /* =====================================================
-       SORT TRANSACTIONS
-       ===================================================== */
+
 
     const recentTransactions =
         [...transactions]
             .sort(
                 (a, b) =>
-                    new Date(b.date) -
-                    new Date(a.date)
+                    getDateValue(b.date) -
+                    getDateValue(a.date)
             )
             .slice(0, 5);
 
-
-    /* =====================================================
-       EMPTY STATE
-       ===================================================== */
-
-    if (
-        recentTransactions.length === 0
-    ) {
+        if(
+            recentTransactions.length === 0
+        ) {
 
         container.innerHTML = `
             <p class="empty-message">
@@ -309,25 +334,20 @@ function displayRecentTransactions(
     }
 
 
-    /* =====================================================
-       RENDER TRANSACTIONS
-       ===================================================== */
+
 
     container.innerHTML =
         recentTransactions
             .map(
-                transaction =>
-                    createTransactionHTML(
-                        transaction
-                    )
+                createTransactionHTML
             )
             .join("");
 
-}
+        }
 
 
 /* =========================================================
-   CREATE TRANSACTION HTML
+   TRANSACTION HTML
    ========================================================= */
 
 function createTransactionHTML(
@@ -343,19 +363,18 @@ function createTransactionHTML(
             ? "income"
             : "expense";
 
-
-    const sign =
-        isIncome
-            ? "+"
-            : "-";
-
-
     const typeLabel =
         isIncome
             ? "Income"
             : "Expense";
 
 
+    const sign =
+        isIncome
+            ? "+"
+            : "-";
+
+            
     return `
         <article
             class="transaction-item ${typeClass}"
@@ -400,7 +419,225 @@ function createTransactionHTML(
 
         </article>
     `;
+}
 
+
+/* =========================================================
+   INCOME VS EXPENSES CHART
+   ========================================================= */
+
+function createIncomeExpenseChart(
+    transactions,
+    currentMonth
+) {
+
+    const canvas =
+        document.querySelector(
+            "#income-expense-chart"
+        );
+
+
+    if (!canvas) {
+        return;
+    }
+
+
+    /*
+     * Use current month data.
+     */
+
+    const monthlyTransactions =
+        transactions.filter(
+            transaction =>
+                transaction.date?.startsWith(
+                    currentMonth
+                )
+        );
+
+
+    const income =
+        calculateTotal(
+            monthlyTransactions,
+            "income"
+        );
+
+
+    const expenses =
+        calculateTotal(
+            monthlyTransactions,
+            "expense"
+        );
+
+
+    /*
+     * Make sure Chart.js is loaded.
+     */
+
+    if (
+        typeof Chart ===
+        "undefined"
+    ) {
+
+        console.error(
+            "Chart.js is not loaded."
+        );
+
+        return;
+    }
+
+
+    if (incomeExpenseChart) {
+
+        incomeExpenseChart.destroy();
+
+    }
+
+
+    incomeExpenseChart =
+        new Chart(
+            canvas,
+            {
+
+                type: "bar",
+
+                data: {
+
+                    labels: [
+                        "Income",
+                        "Expenses"
+                    ],
+
+                    datasets: [
+                        {
+                            label:
+                                "Current Month",
+
+                            data: [
+                                income,
+                                expenses
+                            ]
+                        }
+                    ]
+
+                },
+
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio:
+                        false,
+
+                    plugins: {
+
+                        legend: {
+                            display: false
+                        }
+
+                    },
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero: true,
+
+                            ticks: {
+
+                                callback:
+                                    value =>
+                                        formatCurrency(
+                                            value
+                                        )
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+}
+
+
+/* =========================================================
+   UPDATE ELEMENT
+   ========================================================= */
+
+function updateElement(
+    selector,
+    value
+) {
+
+    const element =
+        document.querySelector(
+            selector
+        );
+
+
+    if (!element) {
+        return;
+    }
+
+
+    element.textContent =
+        value;
+}
+
+
+/* =========================================================
+   CURRENT MONTH
+   ========================================================= */
+
+function getCurrentMonth() {
+
+    const now =
+        new Date();
+
+
+    const year =
+        now.getFullYear();
+
+
+    const month =
+        String(
+            now.getMonth() + 1
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    return `${year}-${month}`;
+}
+
+
+/* =========================================================
+   DATE VALUE
+   ========================================================= */
+
+function getDateValue(
+    dateString
+) {
+
+    if (!dateString) {
+        return 0;
+    }
+
+
+    const value =
+        new Date(
+            `${dateString}T00:00:00`
+        ).getTime();
+
+
+    return Number.isNaN(value)
+        ? 0
+        : value;
 }
 
 
@@ -416,7 +653,7 @@ function formatCurrency(
         "en-US",
         {
             style: "currency",
-            currency: "USD"
+            currency: CURRENCY
         }
     ).format(
         Number(amount) || 0
@@ -430,39 +667,38 @@ function formatCurrency(
    ========================================================= */
 
 function formatDate(
-    date
+    dateString
 ) {
 
-    if (!date) {
+    if (!dateString) {
         return "No date";
     }
 
 
-    const parsedDate =
+    const date =
         new Date(
-            `${date}T00:00:00`
+            `${dateString}T00:00:00`
         );
 
 
     if (
         Number.isNaN(
-            parsedDate.getTime()
+            date.getTime()
         )
     ) {
 
-        return date;
-
+        return dateString;
     }
 
 
-    return parsedDate.toLocaleDateString(
+    return date.toLocaleDateString(
         "en-US",
         {
             year: "numeric",
             month: "short",
             day: "numeric"
         }
-    
+
     );
 
 }
@@ -500,4 +736,5 @@ function escapeHTML(
             "&#039;"
         );
 
-}
+    }
+

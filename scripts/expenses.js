@@ -2,88 +2,103 @@ import {
     getTransactions,
     addTransaction,
     deleteTransaction
-} from "./storage.js";
-
-
-const expenseForm =
-    document.querySelector("#expense-form");
-
-const expenseList =
-    document.querySelector("#expense-list");
-
-
-document.addEventListener(
-    "DOMContentLoaded",
-    initializeExpenses
-);
+} 
+from "./storage.js";
 
 
 /* =========================================================
    INITIALIZE
    ========================================================= */
 
-function initializeExpenses() {
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
 
-    setDefaultDate();
+        const form =
+            document.querySelector(
+                "#expense-form"
+            );
 
-    renderExpenses();
+        const list =
+            document.querySelector(
+                "#expense-list"
+            );
 
 
-    expenseForm?.addEventListener(
-        "submit",
-        handleExpenseSubmit
-    );
+        if (!form) {
+
+            console.error(
+                "Expense form was not found."
+            );
+
+            return;
+        }
 
 
-    expenseList?.addEventListener(
-        "click",
-        handleExpenseActions
-    );
-}
+        setDefaultDate();
+
+        renderExpenses(list);
+
+
+        form.addEventListener(
+            "submit",
+            event => {
+
+                event.preventDefault();
+
+                saveExpense(
+                    form,
+                    list
+                );
+
+            }
+        );
+
+
+        list?.addEventListener(
+            "click",
+            event => {
+
+                const button =
+                    event.target.closest(
+                        ".delete-transaction"
+                    );
+
+
+                if (!button) {
+                    return;
+                }
+
+
+                deleteExpense(
+                    button.dataset.id,
+                    list
+                );
+
+            }
+        );
+
+    }
+);
 
 
 /* =========================================================
-   DEFAULT DATE
+   SAVE EXPENSE
    ========================================================= */
 
-function setDefaultDate() {
-
-    const dateInput =
-        document.querySelector("#expense-date");
-
-    if (!dateInput) {
-        return;
-    }
-
-
-    if (!dateInput.value) {
-
-        dateInput.value =
-            new Date()
-                .toISOString()
-                .split("T")[0];
-
-    }
-}
-
-
-/* =========================================================
-   SUBMIT EXPENSE
-   ========================================================= */
-
-function handleExpenseSubmit(event) {
-
-    event.preventDefault();
-
+function saveExpense(
+    form,
+    list
+) {
 
     const formData =
-        new FormData(expenseForm);
+        new FormData(form);
 
 
     const description =
-        formData
-            .get("description")
-            .trim();
+        String(
+            formData.get("description") || ""
+        ).trim();
 
 
     const amount =
@@ -93,39 +108,83 @@ function handleExpenseSubmit(event) {
 
 
     const category =
-        formData.get("category");
+        String(
+            formData.get("category") || ""
+        ).trim();
 
 
     const date =
-        formData.get("date");
+        String(
+            formData.get("date") || ""
+        );
 
 
     const paymentMethod =
-        formData.get("paymentMethod");
+        String(
+            formData.get("paymentMethod") || ""
+        ).trim();
 
 
     const notes =
-        formData
-            .get("notes")
-            .trim();
+        String(
+            formData.get("notes") || ""
+        ).trim();
 
 
-    if (
-        !description ||
-        !Number.isFinite(amount) ||
-        amount <= 0 ||
-        !category ||
-        !date
-    ) {
+    /* -----------------------------------------------------
+       VALIDATION
+       ----------------------------------------------------- */
+
+    if (!description) {
 
         showMessage(
-            "Please complete all required fields.",
+            "Please enter a description.",
             "error"
         );
 
         return;
     }
 
+
+    if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+    ) {
+
+        showMessage(
+            "Please enter a valid amount.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    if (!category) {
+
+        showMessage(
+            "Please select a category.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    if (!date) {
+
+        showMessage(
+            "Please select a date.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    /* -----------------------------------------------------
+       SAVE
+       ----------------------------------------------------- */
 
     const transaction =
         addTransaction({
@@ -147,10 +206,16 @@ function handleExpenseSubmit(event) {
         });
 
 
+    console.log(
+        "Saved expense:",
+        transaction
+    );
+
+
     if (!transaction) {
 
         showMessage(
-            "Unable to save expense.",
+            "Expense could not be saved.",
             "error"
         );
 
@@ -158,11 +223,25 @@ function handleExpenseSubmit(event) {
     }
 
 
-    expenseForm.reset();
+    /* -----------------------------------------------------
+       VERIFY STORAGE
+       ----------------------------------------------------- */
+
+    console.log(
+        "All transactions:",
+        getTransactions()
+    );
+
+
+    /* -----------------------------------------------------
+       UPDATE UI
+       ----------------------------------------------------- */
+
+    form.reset();
 
     setDefaultDate();
 
-    renderExpenses();
+    renderExpenses(list);
 
 
     showMessage(
@@ -173,12 +252,14 @@ function handleExpenseSubmit(event) {
 
 
 /* =========================================================
-   DISPLAY EXPENSES
+   RENDER EXPENSES
    ========================================================= */
 
-function renderExpenses() {
+function renderExpenses(
+    list
+) {
 
-    if (!expenseList) {
+    if (!list) {
         return;
     }
 
@@ -187,7 +268,8 @@ function renderExpenses() {
         getTransactions()
             .filter(
                 transaction =>
-                    transaction.type === "expense"
+                    transaction.type ===
+                    "expense"
             )
             .sort(
                 (a, b) =>
@@ -199,7 +281,7 @@ function renderExpenses() {
 
     if (!expenses.length) {
 
-        expenseList.innerHTML = `
+        list.innerHTML = `
             <p class="empty-message">
                 No expense records available.
             </p>
@@ -209,18 +291,22 @@ function renderExpenses() {
     }
 
 
-    expenseList.innerHTML =
+    list.innerHTML =
         expenses
-            .map(createExpenseCard)
+            .map(
+                createExpenseCard
+            )
             .join("");
 }
 
 
 /* =========================================================
-   CREATE EXPENSE CARD
+   CREATE CARD
    ========================================================= */
 
-function createExpenseCard(transaction) {
+function createExpenseCard(
+    transaction
+) {
 
     return `
         <article class="record-card">
@@ -228,21 +314,28 @@ function createExpenseCard(transaction) {
             <div class="record-info">
 
                 <h3>
-                    ${escapeHTML(transaction.description)}
+                    ${escapeHTML(
+                        transaction.description
+                    )}
                 </h3>
 
                 <p>
-                    ${escapeHTML(transaction.category)}
+                    ${escapeHTML(
+                        transaction.category
+                    )}
                 </p>
 
                 <p>
-                    ${formatDate(transaction.date)}
+                    ${formatDate(
+                        transaction.date
+                    )}
                 </p>
 
                 ${
                     transaction.paymentMethod
                         ? `
                             <p>
+                                Payment:
                                 ${escapeHTML(
                                     transaction.paymentMethod
                                 )}
@@ -257,8 +350,11 @@ function createExpenseCard(transaction) {
             <div class="record-amount expense">
 
                 <strong>
-                    -${formatCurrency(transaction.amount)}
+                    -${formatCurrency(
+                        transaction.amount
+                    )}
                 </strong>
+
 
                 <button
                     type="button"
@@ -278,22 +374,10 @@ function createExpenseCard(transaction) {
    DELETE EXPENSE
    ========================================================= */
 
-function handleExpenseActions(event) {
-
-    const button =
-        event.target.closest(
-            ".delete-transaction"
-        );
-
-
-    if (!button) {
-        return;
-    }
-
-
-    const id =
-        button.dataset.id;
-
+function deleteExpense(
+    id,
+    list
+) {
 
     if (!id) {
         return;
@@ -318,7 +402,7 @@ function handleExpenseActions(event) {
     if (!deleted) {
 
         showMessage(
-            "Unable to delete expense.",
+            "Expense could not be deleted.",
             "error"
         );
 
@@ -326,7 +410,7 @@ function handleExpenseActions(event) {
     }
 
 
-    renderExpenses();
+    renderExpenses(list);
 
 
     showMessage(
@@ -337,21 +421,51 @@ function handleExpenseActions(event) {
 
 
 /* =========================================================
+   DEFAULT DATE
+   ========================================================= */
+
+function setDefaultDate() {
+
+    const input =
+        document.querySelector(
+            "#expense-date"
+        );
+
+
+    if (
+        input &&
+        !input.value
+    ) {
+
+        input.value =
+            new Date()
+                .toISOString()
+                .split("T")[0];
+
+    }
+}
+
+
+/* =========================================================
    MESSAGE
    ========================================================= */
 
 function showMessage(
     message,
-    type = "success"
+    type
 ) {
 
     document
-        .querySelector(".page-message")
+        .querySelector(
+            ".page-message"
+        )
         ?.remove();
 
 
     const element =
-        document.createElement("p");
+        document.createElement(
+            "p"
+        );
 
 
     element.className =
@@ -378,7 +492,9 @@ function showMessage(
    FORMAT CURRENCY
    ========================================================= */
 
-function formatCurrency(amount) {
+function formatCurrency(
+    amount
+) {
 
     return new Intl.NumberFormat(
         "en-US",
@@ -396,7 +512,9 @@ function formatCurrency(amount) {
    FORMAT DATE
    ========================================================= */
 
-function formatDate(dateString) {
+function formatDate(
+    dateString
+) {
 
     if (!dateString) {
         return "No date";
@@ -414,6 +532,7 @@ function formatDate(dateString) {
             date.getTime()
         )
     ) {
+
         return dateString;
     }
 
@@ -433,12 +552,31 @@ function formatDate(dateString) {
    ESCAPE HTML
    ========================================================= */
 
-function escapeHTML(value) {
+function escapeHTML(
+    value
+) {
 
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    return String(
+        value ?? ""
+    )
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
 }

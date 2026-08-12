@@ -2,100 +2,177 @@ import {
     getTransactions,
     addTransaction,
     deleteTransaction
-} from "./storage.js";
-
-
-const incomeForm = document.querySelector("#income-form");
-const incomeList = document.querySelector("#income-list");
-
-
-document.addEventListener("DOMContentLoaded", initializeIncome);
+} 
+from "./storage.js";
 
 
 /* =========================================================
    INITIALIZE
    ========================================================= */
 
-function initializeIncome() {
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
 
-    setDefaultDate();
-    renderIncome();
+        const form =
+            document.querySelector("#income-form");
 
-    incomeForm?.addEventListener(
-        "submit",
-        handleIncomeSubmit
-    );
+        const list =
+            document.querySelector("#income-list");
 
-    incomeList?.addEventListener(
-        "click",
-        handleIncomeActions
-    );
-}
+
+        if (!form) {
+            console.error(
+                "Income form was not found."
+            );
+            return;
+        }
+
+
+        setDefaultDate();
+
+        renderIncome(list);
+
+
+        form.addEventListener(
+            "submit",
+            event => {
+
+                event.preventDefault();
+
+                saveIncome(
+                    form,
+                    list
+                );
+
+            }
+        );
+
+
+        list?.addEventListener(
+            "click",
+            event => {
+
+                const button =
+                    event.target.closest(
+                        ".delete-transaction"
+                    );
+
+
+                if (!button) {
+                    return;
+                }
+
+
+                deleteIncome(
+                    button.dataset.id,
+                    list
+                );
+
+            }
+        );
+
+    }
+);
 
 
 /* =========================================================
-   DEFAULT DATE
+   SAVE INCOME
    ========================================================= */
 
-function setDefaultDate() {
-
-    const dateInput =
-        document.querySelector("#income-date");
-
-    if (!dateInput) {
-        return;
-    }
-
-    if (!dateInput.value) {
-        dateInput.value =
-            new Date().toISOString().split("T")[0];
-    }
-}
-
-
-/* =========================================================
-   SUBMIT INCOME
-   ========================================================= */
-
-function handleIncomeSubmit(event) {
-
-    event.preventDefault();
+function saveIncome(
+    form,
+    list
+) {
 
     const formData =
-        new FormData(incomeForm);
+        new FormData(form);
+
 
     const description =
-        formData.get("description").trim();
+        String(
+            formData.get("description") || ""
+        ).trim();
+
 
     const amount =
-        Number(formData.get("amount"));
+        Number(
+            formData.get("amount")
+        );
+
 
     const category =
-        formData.get("category");
+        String(
+            formData.get("category") || ""
+        ).trim();
+
 
     const date =
-        formData.get("date");
+        String(
+            formData.get("date") || ""
+        );
+
 
     const notes =
-        formData.get("notes").trim();
+        String(
+            formData.get("notes") || ""
+        ).trim();
 
 
-    if (
-        !description ||
-        !Number.isFinite(amount) ||
-        amount <= 0 ||
-        !category ||
-        !date
-    ) {
+    /* -----------------------------------------------------
+       VALIDATION
+       ----------------------------------------------------- */
+
+    if (!description) {
 
         showMessage(
-            "Please complete all required fields.",
+            "Please enter a description.",
             "error"
         );
 
         return;
     }
 
+
+    if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+    ) {
+
+        showMessage(
+            "Please enter a valid amount.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    if (!category) {
+
+        showMessage(
+            "Please select a category.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    if (!date) {
+
+        showMessage(
+            "Please select a date.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    /* -----------------------------------------------------
+       SAVE
+       ----------------------------------------------------- */
 
     const transaction =
         addTransaction({
@@ -117,10 +194,16 @@ function handleIncomeSubmit(event) {
         });
 
 
+    console.log(
+        "Saved income:",
+        transaction
+    );
+
+
     if (!transaction) {
 
         showMessage(
-            "Unable to save income.",
+            "Income could not be saved.",
             "error"
         );
 
@@ -128,11 +211,25 @@ function handleIncomeSubmit(event) {
     }
 
 
-    incomeForm.reset();
+    /* -----------------------------------------------------
+       VERIFY LOCAL STORAGE
+       ----------------------------------------------------- */
+
+    console.log(
+        "All transactions:",
+        getTransactions()
+    );
+
+
+    /* -----------------------------------------------------
+       UPDATE UI
+       ----------------------------------------------------- */
+
+    form.reset();
 
     setDefaultDate();
 
-    renderIncome();
+    renderIncome(list);
 
 
     showMessage(
@@ -143,12 +240,14 @@ function handleIncomeSubmit(event) {
 
 
 /* =========================================================
-   DISPLAY INCOME
+   RENDER INCOME
    ========================================================= */
 
-function renderIncome() {
+function renderIncome(
+    list
+) {
 
-    if (!incomeList) {
+    if (!list) {
         return;
     }
 
@@ -157,7 +256,8 @@ function renderIncome() {
         getTransactions()
             .filter(
                 transaction =>
-                    transaction.type === "income"
+                    transaction.type ===
+                    "income"
             )
             .sort(
                 (a, b) =>
@@ -169,7 +269,7 @@ function renderIncome() {
 
     if (!income.length) {
 
-        incomeList.innerHTML = `
+        list.innerHTML = `
             <p class="empty-message">
                 No income records available.
             </p>
@@ -179,18 +279,22 @@ function renderIncome() {
     }
 
 
-    incomeList.innerHTML =
+    list.innerHTML =
         income
-            .map(createIncomeCard)
+            .map(
+                createIncomeCard
+            )
             .join("");
 }
 
 
 /* =========================================================
-   CREATE INCOME CARD
+   CREATE CARD
    ========================================================= */
 
-function createIncomeCard(transaction) {
+function createIncomeCard(
+    transaction
+) {
 
     return `
         <article class="record-card">
@@ -198,16 +302,34 @@ function createIncomeCard(transaction) {
             <div class="record-info">
 
                 <h3>
-                    ${escapeHTML(transaction.description)}
+                    ${escapeHTML(
+                        transaction.description
+                    )}
                 </h3>
 
                 <p>
-                    ${escapeHTML(transaction.category)}
+                    ${escapeHTML(
+                        transaction.category
+                    )}
                 </p>
 
                 <p>
-                    ${formatDate(transaction.date)}
+                    ${formatDate(
+                        transaction.date
+                    )}
                 </p>
+
+                ${
+                    transaction.notes
+                        ? `
+                            <p>
+                                ${escapeHTML(
+                                    transaction.notes
+                                )}
+                            </p>
+                        `
+                        : ""
+                }
 
             </div>
 
@@ -215,8 +337,11 @@ function createIncomeCard(transaction) {
             <div class="record-amount income">
 
                 <strong>
-                    +${formatCurrency(transaction.amount)}
+                    +${formatCurrency(
+                        transaction.amount
+                    )}
                 </strong>
+
 
                 <button
                     type="button"
@@ -236,20 +361,10 @@ function createIncomeCard(transaction) {
    DELETE INCOME
    ========================================================= */
 
-function handleIncomeActions(event) {
-
-    const button =
-        event.target.closest(
-            ".delete-transaction"
-        );
-
-    if (!button) {
-        return;
-    }
-
-
-    const id =
-        button.dataset.id;
+function deleteIncome(
+    id,
+    list
+) {
 
     if (!id) {
         return;
@@ -260,6 +375,7 @@ function handleIncomeActions(event) {
         confirm(
             "Are you sure you want to delete this income?"
         );
+
 
     if (!confirmed) {
         return;
@@ -273,7 +389,7 @@ function handleIncomeActions(event) {
     if (!deleted) {
 
         showMessage(
-            "Unable to delete income.",
+            "Income could not be deleted.",
             "error"
         );
 
@@ -281,7 +397,7 @@ function handleIncomeActions(event) {
     }
 
 
-    renderIncome();
+    renderIncome(list);
 
 
     showMessage(
@@ -292,36 +408,70 @@ function handleIncomeActions(event) {
 
 
 /* =========================================================
-   SUCCESS / ERROR MESSAGE
+   DEFAULT DATE
    ========================================================= */
 
-function showMessage(message, type = "success") {
+function setDefaultDate() {
 
-    const oldMessage =
-        document.querySelector(".page-message");
+    const input =
+        document.querySelector(
+            "#income-date"
+        );
 
-    oldMessage?.remove();
+
+    if (
+        input &&
+        !input.value
+    ) {
+
+        input.value =
+            new Date()
+                .toISOString()
+                .split("T")[0];
+
+    }
+}
+
+
+/* =========================================================
+   MESSAGE
+   ========================================================= */
+
+function showMessage(
+    message,
+    type
+) {
+
+    document
+        .querySelector(
+            ".page-message"
+        )
+        ?.remove();
 
 
     const element =
-        document.createElement("p");
+        document.createElement(
+            "p"
+        );
+
 
     element.className =
         `page-message ${type}`;
+
 
     element.textContent =
         message;
 
 
-    const main =
-        document.querySelector("main");
+    document
+        .querySelector("main")
+        ?.prepend(element);
 
-    main?.prepend(element);
 
-
-    setTimeout(() => {
-        element.remove();
-    }, 3000);
+    setTimeout(
+        () => element.remove(),
+        3000
+    );
 }
 
 
@@ -329,7 +479,9 @@ function showMessage(message, type = "success") {
    FORMAT CURRENCY
    ========================================================= */
 
-function formatCurrency(amount) {
+function formatCurrency(
+    amount
+) {
 
     return new Intl.NumberFormat(
         "en-US",
@@ -337,7 +489,9 @@ function formatCurrency(amount) {
             style: "currency",
             currency: "USD"
         }
-    ).format(Number(amount) || 0);
+    ).format(
+        Number(amount) || 0
+    );
 }
 
 
@@ -345,7 +499,9 @@ function formatCurrency(amount) {
    FORMAT DATE
    ========================================================= */
 
-function formatDate(dateString) {
+function formatDate(
+    dateString
+) {
 
     if (!dateString) {
         return "No date";
@@ -353,10 +509,17 @@ function formatDate(dateString) {
 
 
     const date =
-        new Date(`${dateString}T00:00:00`);
+        new Date(
+            `${dateString}T00:00:00`
+        );
 
 
-    if (Number.isNaN(date.getTime())) {
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
         return dateString;
     }
 
@@ -376,12 +539,31 @@ function formatDate(dateString) {
    ESCAPE HTML
    ========================================================= */
 
-function escapeHTML(value) {
+function escapeHTML(
+    value
+) {
 
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    return String(
+        value ?? ""
+    )
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
 }
